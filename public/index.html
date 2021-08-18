@@ -5,20 +5,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.css">
     <link rel="stylesheet" href="/main.css">
     <title>Autodesk Forge: Simple Viewer</title>
 </head>
 
-<body>
-    <div id="header">
-        <img class="logo" src="/logo.png" alt="Autodesk Forge">
-        <span class="title">Simple Viewer</span>
-        <select name="models" id="models"></select>
-        <button id="upload" title="Upload New Model">Upload</button>
-        <input style="display: none" type="file" id="input">
-    </div>
-    <div id="preview"></div>
+<body class="d-flex flex-column">
+    <nav class="navbar navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <img src="/logo.png" alt="Autodesk Forge" height="24" class="d-inline-block align-text-top"> Simple Viewer
+            </a>
+            <form class="d-flex">
+                <select id="models" class="form-select me-2"></select>
+                <button class="btn btn-outline-secondary" id="upload" title="Upload New Model">Upload</button>
+                <input style="display: none" type="file" id="input">
+            </form>
+        </div>
+    </nav>
+    <div id="preview" class="flex-grow-1 position-relative"></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script>
     <script src="/main.js" type="module"></script>
 </body>
