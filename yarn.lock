@@ -603,10 +603,10 @@ setprototypeof@1.1.1:
   resolved "https://registry.yarnpkg.com/setprototypeof/-/setprototypeof-1.1.1.tgz#7e95acb24aa92f5885e0abef5ba131330d4ae683"
   integrity sha512-JvdAWfbXeIGaZ9cILp38HntZSFSo3mWg6xGcJJsd+d4aRMOqauag1C63dJfDw7OaMYwEbHMOxEZ1lqVRYP2OAw==
 
-simpler-forge-apis@^0.0.5:
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/simpler-forge-apis/-/simpler-forge-apis-0.0.5.tgz#df4c2831d3cc9de90af8acc9de0e2b0c74a08856"
-  integrity sha512-8R43zZOVtCfPSmn3OCQVyArPXM53QlsOjMdheHPgth9lPHAA6T/ZNshox/WJGVS9GFGXsvR9ZAi9fdmec4ELcw==
+simpler-forge-apis@0.0.6:
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/simpler-forge-apis/-/simpler-forge-apis-0.0.6.tgz#54af74649aef3b579b01aeac450b46a742c2cf51"
+  integrity sha512-0mPUdeoXkeJxSaboTtvyDhbSOBo/hMF/axkeDW8wxUxyEbovdp+Z6xJ1ide6UK8gXQYIhbzCMeeCQliHAJO28A==
   dependencies:
     forge-apis "^0.8.6"
 

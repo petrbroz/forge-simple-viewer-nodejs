@@ -14,7 +14,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "express-formidable": "^1.2.0",
-    "simpler-forge-apis": "0.0.5"
+    "simpler-forge-apis": "0.0.6"
   },
   "devDependencies": {
     "@types/forge-viewer": "^7.48.0"

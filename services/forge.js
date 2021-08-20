@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { AuthenticationClient, OSSClient, ModelDerivativeClient, urnify } = require('simpler-forge-apis');
+const { AuthenticationClient, OSSClient, ModelDerivativeClient, DataRetentionPolicy, urnify } = require('simpler-forge-apis');
 
 const { FORGE_CLIENT_ID, FORGE_CLIENT_SECRET, FORGE_BUCKET } = process.env;
 if (!FORGE_CLIENT_ID || !FORGE_CLIENT_SECRET) {
@@ -17,7 +17,7 @@ async function _ensureBucketExists() {
         await ossClient.getBucketDetails(BUCKET);
     } catch (err) {
         if (err.statusCode === 404) {
-            await ossClient.createBucket(BUCKET, 'temporary');
+            await ossClient.createBucket(BUCKET, DataRetentionPolicy.Temporary);
         } else {
             throw err;
         }
