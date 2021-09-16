@@ -31,34 +31,24 @@ body, html {
     min-width: 2em;
 }
 
-#preview, #sidebar {
+#preview {
     position: absolute;
     top: 3em;
     bottom: 0;
-}
-
-#preview {
     left: 0;
-    width: 66%;
-}
-
-#sidebar {
     right: 0;
-    width: 33%;
-    display: flex;
-    flex-flow: column nowrap;
-    justify-content: start;
-    align-items: stretch;
-    padding: 0.5em;
 }
 
-#sidebar > * {
-    flex: 1;
+#dashboard-barchart-button {
+    background-image: url(https://github.com/Rush/Font-Awesome-SVG-PNG/raw/master/black/png/24/bar-chart.png);
+    background-size: 24px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
-#sidebar > select, #sidebar > h2 {
-    flex: 0;
-    height: 2em;
-    font-family: ArtifaktElement; /* Will be added by Forge Viewer */
-    font-size: 1em;
+#dashboard-piechart-button {
+    background-image: url(https://github.com/Rush/Font-Awesome-SVG-PNG/raw/master/black/png/24/pie-chart.png);
+    background-size: 24px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
