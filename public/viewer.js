@@ -1,24 +1,29 @@
 /// import * as Autodesk from "@types/forge-viewer";
 
+import { SummaryExtension } from './summary-extension.js';
+
+Autodesk.Viewing.theExtensionManager.registerExtension('SummaryExtension', SummaryExtension);
+
 export async function initViewer(container) {
-    async function getAccessToken(callback) {
-        const resp = await fetch('/api/auth/token');
-        if (resp.ok) {
-            const { access_token, expires_in } = await resp.json();
-            callback(access_token, expires_in);
-        } else {
-            alert('Could not obtain access token. See the console for more details.');
-            console.error(await resp.text());
-        }
-    }
     return new Promise(function (resolve, reject) {
         Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
-            const viewer = new Autodesk.Viewing.GuiViewer3D(container);
+            const viewer = new Autodesk.Viewing.GuiViewer3D(container, { extensions: ['SummaryExtension'] });
             viewer.start();
             viewer.setTheme('light-theme');
             resolve(viewer);
         });
     });
+}
+
+async function getAccessToken(callback) {
+    const resp = await fetch('/api/auth/token');
+    if (resp.ok) {
+        const { access_token, expires_in } = await resp.json();
+        callback(access_token, expires_in);
+    } else {
+        alert('Could not obtain access token. See the console for more details.');
+        console.error(await resp.text());
+    }
 }
 
 export function loadModel(viewer, urn) {

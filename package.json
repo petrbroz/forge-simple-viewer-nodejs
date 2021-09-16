@@ -17,6 +17,7 @@
     "forge-apis": "^0.8.6"
   },
   "devDependencies": {
+    "@types/chart.js": "^2.9.34",
     "@types/forge-viewer": "^7.48.0"
   }
 }

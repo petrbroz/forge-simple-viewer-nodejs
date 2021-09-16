@@ -1,9 +1,11 @@
 import { initViewer, loadModel } from './viewer.js';
+import { initializeDashboard } from './dashboard.js';
 
 initViewer(document.getElementById('preview')).then(viewer => {
     const urn = window.location.hash ? window.location.hash.substr(1) : null;
     setupModelSelection(viewer, urn);
     setupModelUpload(viewer);
+    initializeDashboard(viewer);
 });
 
 async function setupModelSelection(viewer, selectedUrn) {

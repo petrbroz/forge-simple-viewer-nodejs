@@ -4,22 +4,14 @@ body, html {
     height: 100vh;
 }
 
-#header, #preview {
+#header {
     position: absolute;
     width: 100%;
-}
-
-#header {
     height: 3em;
     display: flex;
     flex-flow: row nowrap;
     justify-content: space-between;
     align-items: center;
-}
-
-#preview {
-    top: 3em;
-    bottom: 0;
 }
 
 #header > * {
@@ -37,4 +29,36 @@ body, html {
 #models {
     flex: 0 1 auto;
     min-width: 2em;
+}
+
+#preview, #sidebar {
+    position: absolute;
+    top: 3em;
+    bottom: 0;
+}
+
+#preview {
+    left: 0;
+    width: 66%;
+}
+
+#sidebar {
+    right: 0;
+    width: 33%;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: start;
+    align-items: stretch;
+    padding: 0.5em;
+}
+
+#sidebar > * {
+    flex: 1;
+}
+
+#sidebar > select, #sidebar > h2 {
+    flex: 0;
+    height: 2em;
+    font-family: ArtifaktElement; /* Will be added by Forge Viewer */
+    font-size: 1em;
 }
