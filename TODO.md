@@ -1,0 +1,1 @@
+- see if Chart.js can be imported as an ES6 module

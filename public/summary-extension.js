@@ -14,18 +14,21 @@ export class SummaryExtension extends Autodesk.Viewing.Extension {
     }
 
     findLeafNodes(model) {
-        const tree = model.getInstanceTree();
-        let leaves = [];
-        tree.enumNodeChildren(tree.getRootId(), function (dbid) {
-            if (tree.getChildCount(dbid) === 0) {
-                leaves.push(dbid);
-            }
-        }, true);
-        return leaves;
+        return new Promise(function (resolve, reject) {
+            model.getObjectTree(function (tree) {
+                let leaves = [];
+                tree.enumNodeChildren(tree.getRootId(), function (dbid) {
+                    if (tree.getChildCount(dbid) === 0) {
+                        leaves.push(dbid);
+                    }
+                }, true);
+                resolve(leaves);
+            }, reject);
+        });
     }
 
-    computeHistogram(model, propertyName) {
-        const dbids = this.findLeafNodes(model);
+    async computePropertyHistogram(model, propertyName) {
+        const dbids = await this.findLeafNodes(model);
         return new Promise(function (resolve, reject) {
             model.getBulkProperties(dbids, { propFilter: [propertyName] }, function (results) {
                 let histogram = new Map();
@@ -45,7 +48,7 @@ export class SummaryExtension extends Autodesk.Viewing.Extension {
     }
 
     async findAllProperties(model) {
-        const dbids = this.findLeafNodes(model);
+        const dbids = await this.findLeafNodes(model);
         return new Promise(function (resolve, reject) {
             model.getBulkProperties(dbids, {}, function (results) {
                 let propNames = new Set();
@@ -59,25 +62,21 @@ export class SummaryExtension extends Autodesk.Viewing.Extension {
         });
     }
 
-    // Alternative implementation, more efficient but returning
-    // many more properties that may not be relevant
-    async findAllProperties2(model) {
-        /**
-         * Custom user function for querying the property database.
-         * @param {object} pdb Property database (see https://forge.autodesk.com/en/docs/viewer/v6/reference/globals/PropertyDatabase).
-         * @returns {string[]} List of all property names used throughout the database.
-         */
-        function userFunction(pdb) {
-            let propNames = new Set();
-            pdb.enumAttributes(function (attrId, attrDef) {
-                if (attrDef.category && attrDef.category.startsWith('__')) { // skip internal attributes
-                    return;
+    async aggregatePropertyValues(model, dbids, propertyName, aggregateFunc, initialValue = 0) {
+        if (!dbids) {
+            dbids = await this.findLeafNodes(model);
+        }
+        return new Promise(function (resolve, reject) {
+            let aggregatedValue = initialValue;
+            model.getBulkProperties(dbids, { propFilter: [propertyName] }, function (results) {
+                for (const result of results) {
+                    if (result.properties.length > 0) {
+                        const prop = result.properties[0];
+                        aggregatedValue = aggregateFunc(aggregatedValue, prop.displayValue, prop);
+                    }
                 }
-                propNames.add(attrDef.name);
-            })
-            return Array.from(propNames.values());
-        };
-        const result = await model.getPropertyDb().executeUserFunction(userFunction);
-        return result;
+                resolve(aggregatedValue);
+            }, reject);
+        });
     }
 }

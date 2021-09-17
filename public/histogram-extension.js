@@ -1,23 +1,18 @@
 /// import * as Chart from "@types/chart.js";
 
-/*
-TODO:
-- see if Chart.js can be imported as an ES6 module
-*/
+Chart.defaults.plugins.legend.display = false;
 
-export class DashboardExtension extends Autodesk.Viewing.Extension {
+export class HistogramExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
         this._group = null;
-        this._barChartButton = null;
         this._barChartPanel = null;
-        this._pieChartButton = null;
         this._pieChartPanel = null;
     }
 
     async load() {
         await this.viewer.loadExtension('SummaryExtension');
-        this.viewer.addEventListener(Autodesk.Viewing.OBJECT_TREE_CREATED_EVENT, async (ev) => {
+        this.viewer.addEventListener(Autodesk.Viewing.OBJECT_TREE_CREATED_EVENT, () => {
             if (this._barChartPanel) {
                 this._barChartPanel.setModel(this.viewer.model);
             }
@@ -25,20 +20,13 @@ export class DashboardExtension extends Autodesk.Viewing.Extension {
                 this._pieChartPanel.setModel(this.viewer.model);
             }
         });
-        console.log('DashboardExtension loaded.');
+        console.log('HistogramExtension loaded.');
         return true;
     }
 
     async unload() {
-        if (this._barChartPanel) {
-            this._barChartPanel.setVisible(false);
-            this._barChartPanel = null;
-        }
-        if (this._pieChartPanel) {
-            this._pieChartPanel.setVisible(false);
-            this._pieChartPanel = null;
-        }
-        console.log('DashboardExtension unloaded.');
+        this._removeUI();
+        console.log('HistogramExtension unloaded.');
         return true;
     }
 
@@ -47,42 +35,51 @@ export class DashboardExtension extends Autodesk.Viewing.Extension {
     }
 
     _createUI() {
-        this._group = this.viewer.toolbar.getControl('dashboard-group');
+        this._group = this.viewer.toolbar.getControl('histogram-group');
         if (!this._group) {
-            this._group = new Autodesk.Viewing.UI.ControlGroup('dashboard-group');
+            this._group = new Autodesk.Viewing.UI.ControlGroup('histogram-group');
             this.viewer.toolbar.addControl(this._group);
         }
 
-        this._barChartButton = new Autodesk.Viewing.UI.Button('dashboard-barchart-button');
-        this._barChartButton.onClick = (ev) => {
+        const barChartButton = new Autodesk.Viewing.UI.Button('histogram-barchart-button');
+        barChartButton.onClick = () => {
             if (!this._barChartPanel) {
-                this._barChartPanel = new BarChartPanel(this.viewer, 'dashboard-barchart', 'Summary (Bar Chart)', { x: 10, y: 10 });
+                this._barChartPanel = new BarChartPanel(this.viewer, 'histogram-barchart', 'Property Histogram', { x: 10, y: 10 });
                 if (this.viewer.model) {
                     this._barChartPanel.setModel(this.viewer.model);
                 }
             }
             this._barChartPanel.setVisible(!this._barChartPanel.isVisible());
-            this._barChartButton.setState(this._barChartPanel.isVisible() ? Autodesk.Viewing.UI.Button.State.ACTIVE : Autodesk.Viewing.UI.Button.State.INACTIVE);
+            const { ACTIVE, INACTIVE } = Autodesk.Viewing.UI.Button.State;
+            barChartButton.setState(this._barChartPanel.isVisible() ? ACTIVE : INACTIVE);
         };
-        this._barChartButton.setToolTip('Show Summary (Bar Chart)');
-        this._group.addControl(this._barChartButton);
+        barChartButton.setToolTip('Show Property Histogram (Bar Chart)');
+        this._group.addControl(barChartButton);
 
-        this._pieChartButton = new Autodesk.Viewing.UI.Button('dashboard-piechart-button');
-        this._pieChartButton.onClick = (ev) => {
+        const pieChartButton = new Autodesk.Viewing.UI.Button('histogram-piechart-button');
+        pieChartButton.onClick = () => {
             if (!this._pieChartPanel) {
-                this._pieChartPanel = new PieChartPanel(this.viewer, 'dashboard-piechart', 'Summary (Pie Chart)', { x: 10, y: 420 });
+                this._pieChartPanel = new PieChartPanel(this.viewer, 'histogram-piechart', 'Property Histogram', { x: 10, y: 420 });
                 if (this.viewer.model) {
                     this._pieChartPanel.setModel(this.viewer.model);
                 }
             }
             this._pieChartPanel.setVisible(!this._pieChartPanel.isVisible());
-            this._pieChartButton.setState(this._pieChartPanel.isVisible() ? Autodesk.Viewing.UI.Button.State.ACTIVE : Autodesk.Viewing.UI.Button.State.INACTIVE);
+            pieChartButton.setState(this._pieChartPanel.isVisible() ? Autodesk.Viewing.UI.Button.State.ACTIVE : Autodesk.Viewing.UI.Button.State.INACTIVE);
         };
-        this._pieChartButton.setToolTip('Show Summary (Pie Chart)');
-        this._group.addControl(this._pieChartButton);
+        pieChartButton.setToolTip('Show Property Histogram (Pie Chart)');
+        this._group.addControl(pieChartButton);
     }
 
     _removeUI() {
+        if (this._barChartPanel) {
+            this._barChartPanel.setVisible(false);
+            this._barChartPanel = null;
+        }
+        if (this._pieChartPanel) {
+            this._pieChartPanel.setVisible(false);
+            this._pieChartPanel = null;
+        }
         if (this._group) {
             this.viewer.toolbar.removeControl(this._group);
             this._group = null;
@@ -97,7 +94,7 @@ class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
         this.container.style.left = (options.x || 0) + 'px';
         this.container.style.top = (options.y || 0) + 'px';
         this.container.style.width = (options.width || 500) + 'px';
-        this.container.style.height = (options.width || 400) + 'px';
+        this.container.style.height = (options.height || 400) + 'px';
         this.container.style.resize = 'none';
     }
 
@@ -106,34 +103,38 @@ class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
         this.initializeMoveHandlers(this.title);
         this.container.appendChild(this.title);
         this.content = document.createElement('div');
-        this.content.style.padding = '0.5em';
+        this.content.style.height = '350px';
         this.content.style.backgroundColor = 'white';
         this.content.innerHTML = `
-            <select class="props-dropdown"></select>
-            <canvas width="500" height="350" />
+            <div class="props-container" style="position: relative; height: 25px; padding: 0.5em;">
+                <select class="props"></select>
+            </div>
+            <div class="chart-container" style="position: relative; height: 325px; padding: 0.5em;">
+                <canvas class="chart"></canvas>
+            </div>
         `;
-        this.select = this.content.children[0];
-        this.select.onchange = this.updateChart.bind(this);
-        this.canvas = this.content.children[1];
+        this.select = this.content.querySelector('select.props');
+        this.canvas = this.content.querySelector('canvas.chart');
         this.container.appendChild(this.content);
+
+        this.chart = this.createChart();
+    }
+
+    createChart() {
+        throw new Error('Method not implemented');
     }
 
     async setModel(model) {
-        this.model = model;
         const summaryExt = this.viewer.getExtension('SummaryExtension');
-        try {
-            const properties = await summaryExt.findAllProperties(model);
-            this.select.innerHTML = properties.map(prop => `<option value="${prop}">${prop}</option>`).join('\n');
-            await this.updateChart();
-        } catch (err) {
-            console.error(err);
-        }
+        const properties = await summaryExt.findAllProperties(model);
+        this.select.innerHTML = properties.map(prop => `<option value="${prop}">${prop}</option>`).join('\n');
+        this.select.onchange = () => this.updateChart(model, this.select.value);
+        this.updateChart(model, this.select.value);
     }
 
-    async updateChart() {
-        const propName = this.select.value;
+    async updateChart(model, propName) {
         const summaryExt = this.viewer.getExtension('SummaryExtension');
-        const histogram = await summaryExt.computeHistogram(this.model, propName);
+        const histogram = await summaryExt.computePropertyHistogram(model, propName);
         const propertyValues = Array.from(histogram.keys());
         this.chart.data.labels = propertyValues;
         const dataset = this.chart.data.datasets[0];
@@ -156,20 +157,18 @@ class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
 }
 
 class BarChartPanel extends ChartPanel {
-    initialize() {
-        super.initialize();
-        this.chart = new Chart(this.canvas.getContext('2d'), {
+    createChart() {
+        return new Chart(this.canvas.getContext('2d'), {
             type: 'bar',
             data: {
                 labels: [],
                 datasets: [{ data: [], backgroundColor: [], borderColor: [], borderWidth: 1 }],
                 options: {
                     scales: {
-                        yAxes: [{
-                            ticks: { beginAtZero: true }
-                        }]
+                        yAxes: [{ ticks: { beginAtZero: true } }]
                     },
-                    legend: { display: false }
+                    // legend: { display: false },
+                    maintainAspectRatio: false
                 }
             }
         });
@@ -177,16 +176,16 @@ class BarChartPanel extends ChartPanel {
 }
 
 class PieChartPanel extends ChartPanel {
-    initialize() {
-        super.initialize();
-        this.chart = new Chart(this.canvas.getContext('2d'), {
+    createChart() {
+        return new Chart(this.canvas.getContext('2d'), {
             type: 'doughnut',
             data: {
                 labels: [],
                 datasets: [{ data: [], backgroundColor: [], borderColor: [], borderWidth: 1 }]
             },
             options: {
-                legend: { display: false }
+                // legend: { display: false },
+                maintainAspectRatio: false
             }
         });
     }

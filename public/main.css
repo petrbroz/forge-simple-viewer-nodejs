@@ -39,20 +39,24 @@ body, html {
     right: 0;
 }
 
-#dashboard-barchart-button {
+#histogram-barchart-button, #histogram-piechart-button, #aggregates-button {
+    background-size: 24px;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#histogram-barchart-button {
     background-image: url(https://github.com/Rush/Font-Awesome-SVG-PNG/raw/master/black/png/24/bar-chart.png);
-    background-size: 24px;
-    background-repeat: no-repeat;
-    background-position: center;
 }
 
-#dashboard-piechart-button {
+#histogram-piechart-button {
     background-image: url(https://github.com/Rush/Font-Awesome-SVG-PNG/raw/master/black/png/24/pie-chart.png);
-    background-size: 24px;
-    background-repeat: no-repeat;
-    background-position: center;
 }
 
-#dashboard-barchart .props-dropdown, #dashboard-piechart .props-dropdown {
+#aggregates-button {
+    background-image: url(https://github.com/Rush/Font-Awesome-SVG-PNG/raw/master/black/png/24/table.png);
+}
+
+#histogram-barchart .props, #histogram-piechart .props {
     width: 100%;
 }

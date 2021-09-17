@@ -1,15 +1,20 @@
 /// import * as Autodesk from "@types/forge-viewer";
 
 import { SummaryExtension } from './summary-extension.js';
-import { DashboardExtension } from './dashboard-extension.js';
+import { HistogramExtension } from './histogram-extension.js';
+import { AggregatesExtension } from './aggregates-extension.js';
 
 Autodesk.Viewing.theExtensionManager.registerExtension('SummaryExtension', SummaryExtension);
-Autodesk.Viewing.theExtensionManager.registerExtension('DashboardExtension', DashboardExtension);
+Autodesk.Viewing.theExtensionManager.registerExtension('HistogramExtension', HistogramExtension);
+Autodesk.Viewing.theExtensionManager.registerExtension('AggregatesExtension', AggregatesExtension);
 
 export async function initViewer(container) {
     return new Promise(function (resolve, reject) {
         Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
-            const viewer = new Autodesk.Viewing.GuiViewer3D(container, { extensions: ['SummaryExtension', 'DashboardExtension'] });
+            const config = {
+                extensions: ['SummaryExtension', 'HistogramExtension', 'AggregatesExtension']
+            };
+            const viewer = new Autodesk.Viewing.GuiViewer3D(container, config);
             viewer.start();
             viewer.setTheme('light-theme');
             resolve(viewer);
