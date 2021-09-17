@@ -54,7 +54,7 @@ export class AggregatesExtension extends Autodesk.Viewing.Extension {
             if (!this._aggregatesPanel) {
                 this._aggregatesPanel = new AggregatesPanel(this.viewer, 'aggregates-barchart', 'Property Aggregates');
                 if (this.viewer.model) {
-                    this._aggregatesPanel.update(this.viewer.model, this.viewer.getSelection(), this._properties);
+                    this.update();
                 }
             }
             this._aggregatesPanel.setVisible(!this._aggregatesPanel.isVisible());

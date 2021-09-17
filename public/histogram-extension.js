@@ -44,7 +44,7 @@ export class HistogramExtension extends Autodesk.Viewing.Extension {
         const barChartButton = new Autodesk.Viewing.UI.Button('histogram-barchart-button');
         barChartButton.onClick = () => {
             if (!this._barChartPanel) {
-                this._barChartPanel = new BarChartPanel(this.viewer, 'histogram-barchart', 'Property Histogram', { x: 10, y: 10 });
+                this._barChartPanel = new ChartPanel(this.viewer, 'histogram-barchart', 'Property Histogram', { x: 10, y: 10, chartType: 'bar' });
                 if (this.viewer.model) {
                     this._barChartPanel.setModel(this.viewer.model);
                 }
@@ -59,7 +59,7 @@ export class HistogramExtension extends Autodesk.Viewing.Extension {
         const pieChartButton = new Autodesk.Viewing.UI.Button('histogram-piechart-button');
         pieChartButton.onClick = () => {
             if (!this._pieChartPanel) {
-                this._pieChartPanel = new PieChartPanel(this.viewer, 'histogram-piechart', 'Property Histogram', { x: 10, y: 420 });
+                this._pieChartPanel = new ChartPanel(this.viewer, 'histogram-piechart', 'Property Histogram', { x: 10, y: 420, chartType: 'doughnut' });
                 if (this.viewer.model) {
                     this._pieChartPanel.setModel(this.viewer.model);
                 }
@@ -74,10 +74,12 @@ export class HistogramExtension extends Autodesk.Viewing.Extension {
     _removeUI() {
         if (this._barChartPanel) {
             this._barChartPanel.setVisible(false);
+            this._barChartPanel.uninitialize();
             this._barChartPanel = null;
         }
         if (this._pieChartPanel) {
             this._pieChartPanel.setVisible(false);
+            this._pieChartPanel.uninitialize();
             this._pieChartPanel = null;
         }
         if (this._group) {
@@ -89,13 +91,15 @@ export class HistogramExtension extends Autodesk.Viewing.Extension {
 
 class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
     constructor(viewer, id, title, options) {
-        super(viewer.container, id, title);
+        super(viewer.container, id, title, options);
         this.viewer = viewer;
         this.container.style.left = (options.x || 0) + 'px';
         this.container.style.top = (options.y || 0) + 'px';
         this.container.style.width = (options.width || 500) + 'px';
         this.container.style.height = (options.height || 400) + 'px';
         this.container.style.resize = 'none';
+        this.chartType = options.chartType || 'bar'; // See https://www.chartjs.org/docs/latest for all the supported types of charts
+        this.chart = this.createChart();
     }
 
     initialize() {
@@ -116,12 +120,17 @@ class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
         this.select = this.content.querySelector('select.props');
         this.canvas = this.content.querySelector('canvas.chart');
         this.container.appendChild(this.content);
-
-        this.chart = this.createChart();
     }
 
     createChart() {
-        throw new Error('Method not implemented');
+        return new Chart(this.canvas.getContext('2d'), {
+            type: this.chartType,
+            data: {
+                labels: [],
+                datasets: [{ data: [], backgroundColor: [], borderColor: [], borderWidth: 1 }],
+            },
+            options: { maintainAspectRatio: false }
+        });
     }
 
     async setModel(model) {
@@ -141,8 +150,8 @@ class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
         dataset.label = propName;
         dataset.data = propertyValues.map(val => histogram.get(val).length);
         if (dataset.data.length > 0) {
-            const hslaStrings = dataset.data.map((val, index) => `hsla(${Math.round(index * (360 / dataset.data.length))}, 100%, 50%, 0.2)`);
-            dataset.backgroundColor = dataset.borderColor = hslaStrings;
+            const hslaColors = dataset.data.map((val, index) => `hsla(${Math.round(index * (360 / dataset.data.length))}, 100%, 50%, 0.2)`);
+            dataset.backgroundColor = dataset.borderColor = hslaColors;
         }
         this.chart.update();
         this.chart.config.options.onClick = (ev, items) => {
@@ -153,40 +162,5 @@ class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
                 this.viewer.fitToView(dbids);
             }
         };
-    }
-}
-
-class BarChartPanel extends ChartPanel {
-    createChart() {
-        return new Chart(this.canvas.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: [],
-                datasets: [{ data: [], backgroundColor: [], borderColor: [], borderWidth: 1 }],
-                options: {
-                    scales: {
-                        yAxes: [{ ticks: { beginAtZero: true } }]
-                    },
-                    // legend: { display: false },
-                    maintainAspectRatio: false
-                }
-            }
-        });
-    }
-}
-
-class PieChartPanel extends ChartPanel {
-    createChart() {
-        return new Chart(this.canvas.getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: [],
-                datasets: [{ data: [], backgroundColor: [], borderColor: [], borderWidth: 1 }]
-            },
-            options: {
-                // legend: { display: false },
-                maintainAspectRatio: false
-            }
-        });
     }
 }
