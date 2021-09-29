@@ -8,6 +8,7 @@ export class DataGridExtension extends Autodesk.Viewing.Extension {
 
     async load() {
         await this.viewer.loadExtension('SummaryExtension');
+        await this._loadDependencies();
         this.viewer.addEventListener(Autodesk.Viewing.OBJECT_TREE_CREATED_EVENT, () => {
             if (this._dataGridPanel) {
                 this._dataGridPanel.setModel(this.viewer.model);
@@ -25,6 +26,33 @@ export class DataGridExtension extends Autodesk.Viewing.Extension {
 
     onToolbarCreated() {
         this._createUI();
+    }
+
+    async _loadDependencies() {
+        const loadDependency = (src) => new Promise(function (resolve, reject) {
+            if (src.endsWith('.js')) {
+                const el = document.createElement('script');
+                el.type = 'text/javascript';
+                el.src = src;
+                el.onload = resolve;
+                document.head.appendChild(el);
+            } else if (src.endsWith('.css')) {
+                const el = document.createElement('link');
+                el.rel = 'stylesheet';
+                el.href = src;
+                el.onload = resolve;
+                document.head.appendChild(el);
+            } else {
+                reject('Unsupported file extension.');
+            }
+        });
+        if (!window.Tabulator) {
+            await loadDependency('https://unpkg.com/tabulator-tables/dist/css/tabulator.min.css');
+            await loadDependency('https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js');
+        }
+        if (!window.moment) {
+            await loadDependency('https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js');
+        }
     }
 
     _createUI() {
