@@ -3,16 +3,18 @@
 import { SummaryExtension } from './extensions/summary.js';
 import { HistogramExtension } from './extensions/histogram.js';
 import { AggregatesExtension } from './extensions/aggregates.js';
+import { DataGridExtension } from './extensions/datagrid.js';
 
 Autodesk.Viewing.theExtensionManager.registerExtension('SummaryExtension', SummaryExtension);
 Autodesk.Viewing.theExtensionManager.registerExtension('HistogramExtension', HistogramExtension);
 Autodesk.Viewing.theExtensionManager.registerExtension('AggregatesExtension', AggregatesExtension);
+Autodesk.Viewing.theExtensionManager.registerExtension('DataGridExtension', DataGridExtension);
 
 export async function initViewer(container) {
     return new Promise(function (resolve, reject) {
         Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
             const config = {
-                extensions: ['HistogramExtension', 'AggregatesExtension']
+                extensions: ['HistogramExtension', 'AggregatesExtension', 'DataGridExtension']
             };
             const viewer = new Autodesk.Viewing.GuiViewer3D(container, config);
             viewer.start();
