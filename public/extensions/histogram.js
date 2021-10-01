@@ -3,7 +3,8 @@
 export class HistogramExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
-        this._group = null;
+        this._barChartButton = null;
+        this._pieChartButton = null;
         this._barChartPanel = null;
         this._pieChartPanel = null;
     }
@@ -58,14 +59,14 @@ export class HistogramExtension extends Autodesk.Viewing.Extension {
     }
 
     _createUI() {
-        this._group = this.viewer.toolbar.getControl('histogram-group');
-        if (!this._group) {
-            this._group = new Autodesk.Viewing.UI.ControlGroup('histogram-group');
-            this.viewer.toolbar.addControl(this._group);
+        let group = this.viewer.toolbar.getControl('dashboard-toolbar-group');
+        if (!group) {
+            group = new Autodesk.Viewing.UI.ControlGroup('dashboard-toolbar-group');
+            this.viewer.toolbar.addControl(group);
         }
 
-        const barChartButton = new Autodesk.Viewing.UI.Button('histogram-barchart-button');
-        barChartButton.onClick = () => {
+        this._barChartButton = new Autodesk.Viewing.UI.Button('histogram-barchart-button');
+        this._barChartButton.onClick = () => {
             if (!this._barChartPanel) {
                 this._barChartPanel = new ChartPanel(this.viewer, 'histogram-barchart', 'Property Histogram', { x: 10, y: 10, chartType: 'bar' });
                 if (this.viewer.model) {
@@ -74,13 +75,13 @@ export class HistogramExtension extends Autodesk.Viewing.Extension {
             }
             this._barChartPanel.setVisible(!this._barChartPanel.isVisible());
             const { ACTIVE, INACTIVE } = Autodesk.Viewing.UI.Button.State;
-            barChartButton.setState(this._barChartPanel.isVisible() ? ACTIVE : INACTIVE);
+            this._barChartButton.setState(this._barChartPanel.isVisible() ? ACTIVE : INACTIVE);
         };
-        barChartButton.setToolTip('Show Property Histogram (Bar Chart)');
-        this._group.addControl(barChartButton);
+        this._barChartButton.setToolTip('Show Property Histogram (Bar Chart)');
+        group.addControl(this._barChartButton);
 
-        const pieChartButton = new Autodesk.Viewing.UI.Button('histogram-piechart-button');
-        pieChartButton.onClick = () => {
+        this._pieChartButton = new Autodesk.Viewing.UI.Button('histogram-piechart-button');
+        this._pieChartButton.onClick = () => {
             if (!this._pieChartPanel) {
                 this._pieChartPanel = new ChartPanel(this.viewer, 'histogram-piechart', 'Property Histogram', { x: 10, y: 420, chartType: 'doughnut' });
                 if (this.viewer.model) {
@@ -88,10 +89,10 @@ export class HistogramExtension extends Autodesk.Viewing.Extension {
                 }
             }
             this._pieChartPanel.setVisible(!this._pieChartPanel.isVisible());
-            pieChartButton.setState(this._pieChartPanel.isVisible() ? Autodesk.Viewing.UI.Button.State.ACTIVE : Autodesk.Viewing.UI.Button.State.INACTIVE);
+            this._pieChartButton.setState(this._pieChartPanel.isVisible() ? Autodesk.Viewing.UI.Button.State.ACTIVE : Autodesk.Viewing.UI.Button.State.INACTIVE);
         };
-        pieChartButton.setToolTip('Show Property Histogram (Pie Chart)');
-        this._group.addControl(pieChartButton);
+        this._pieChartButton.setToolTip('Show Property Histogram (Pie Chart)');
+        group.addControl(this._pieChartButton);
     }
 
     _removeUI() {
@@ -105,9 +106,13 @@ export class HistogramExtension extends Autodesk.Viewing.Extension {
             this._pieChartPanel.uninitialize();
             this._pieChartPanel = null;
         }
-        if (this._group) {
-            this.viewer.toolbar.removeControl(this._group);
-            this._group = null;
+        if (this._barChartButton) {
+            this.viewer.toolbar.getControl('dashboard-toolbar-group').removeControl(this._barChartButton);
+            this._barChartButton = null;
+        }
+        if (this._pieChartButton) {
+            this.viewer.toolbar.getControl('dashboard-toolbar-group').removeControl(this._pieChartButton);
+            this._pieChartButton = null;
         }
     }
 }

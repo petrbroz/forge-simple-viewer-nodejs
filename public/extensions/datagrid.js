@@ -2,7 +2,7 @@
 export class DataGridExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
-        this._group = null;
+        this._dataGridButton = null;
         this._dataGridPanel = null;
     }
 
@@ -56,14 +56,14 @@ export class DataGridExtension extends Autodesk.Viewing.Extension {
     }
 
     _createUI() {
-        this._group = this.viewer.toolbar.getControl('datagrid-group');
-        if (!this._group) {
-            this._group = new Autodesk.Viewing.UI.ControlGroup('datagrid-group');
-            this.viewer.toolbar.addControl(this._group);
+        let group = this.viewer.toolbar.getControl('dashboard-toolbar-group');
+        if (!group) {
+            group = new Autodesk.Viewing.UI.ControlGroup('dashboard-toolbar-group');
+            this.viewer.toolbar.addControl(group);
         }
 
-        const dataGridButton = new Autodesk.Viewing.UI.Button('datagrid-button');
-        dataGridButton.onClick = () => {
+        this._dataGridButton = new Autodesk.Viewing.UI.Button('datagrid-button');
+        this._dataGridButton.onClick = () => {
             if (!this._dataGridPanel) {
                 this._dataGridPanel = new DataGridPanel(this.viewer, 'datagrid', 'Data Grid', { x: 10, y: 10 });
                 if (this.viewer.model) {
@@ -72,10 +72,10 @@ export class DataGridExtension extends Autodesk.Viewing.Extension {
             }
             this._dataGridPanel.setVisible(!this._dataGridPanel.isVisible());
             const { ACTIVE, INACTIVE } = Autodesk.Viewing.UI.Button.State;
-            dataGridButton.setState(this._dataGridPanel.isVisible() ? ACTIVE : INACTIVE);
+            this._dataGridButton.setState(this._dataGridPanel.isVisible() ? ACTIVE : INACTIVE);
         };
-        dataGridButton.setToolTip('Show Data Grid');
-        this._group.addControl(dataGridButton);
+        this._dataGridButton.setToolTip('Show Data Grid');
+        group.addControl(this._dataGridButton);
     }
 
     _removeUI() {
@@ -84,9 +84,9 @@ export class DataGridExtension extends Autodesk.Viewing.Extension {
             this._dataGridPanel.uninitialize();
             this._dataGridPanel = null;
         }
-        if (this._group) {
-            this.viewer.toolbar.removeControl(this._group);
-            this._group = null;
+        if (this._dataGridButton) {
+            this.viewer.toolbar.getControl('dashboard-toolbar-group').removeControl(this._dataGridButton);
+            this._dataGridButton = null;
         }
     }
 }

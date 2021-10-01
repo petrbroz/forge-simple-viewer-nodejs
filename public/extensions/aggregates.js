@@ -1,7 +1,7 @@
 export class AggregatesExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
-        this._group = null;
+        this._aggregatesButton = null;
         // For now, the names of properties we want to compute the aggregates for are hard-coded.
         // In future these could be retrieved via the extension `options`, or perhaps set in the UI.
         this._properties = ['Length', 'Area', 'Volume', 'Density', 'Mass', 'Price'];
@@ -43,14 +43,14 @@ export class AggregatesExtension extends Autodesk.Viewing.Extension {
     }
 
     _createUI() {
-        this._group = this.viewer.toolbar.getControl('aggregates-group');
-        if (!this._group) {
-            this._group = new Autodesk.Viewing.UI.ControlGroup('aggregates-group');
-            this.viewer.toolbar.addControl(this._group);
+        let group = this.viewer.toolbar.getControl('dashboard-toolbar-group');
+        if (!group) {
+            group = new Autodesk.Viewing.UI.ControlGroup('dashboard-toolbar-group');
+            this.viewer.toolbar.addControl(group);
         }
 
-        const aggregatesButton = new Autodesk.Viewing.UI.Button('aggregates-button');
-        aggregatesButton.onClick = () => {
+        this._aggregatesButton = new Autodesk.Viewing.UI.Button('aggregates-button');
+        this._aggregatesButton.onClick = () => {
             if (!this._aggregatesPanel) {
                 this._aggregatesPanel = new AggregatesPanel(this.viewer, 'aggregates-barchart', 'Property Aggregates');
                 if (this.viewer.model) {
@@ -59,10 +59,10 @@ export class AggregatesExtension extends Autodesk.Viewing.Extension {
             }
             this._aggregatesPanel.setVisible(!this._aggregatesPanel.isVisible());
             const { ACTIVE, INACTIVE } = Autodesk.Viewing.UI.Button.State;
-            aggregatesButton.setState(this._aggregatesPanel.isVisible() ? ACTIVE : INACTIVE);
+            this._aggregatesButton.setState(this._aggregatesPanel.isVisible() ? ACTIVE : INACTIVE);
         };
-        aggregatesButton.setToolTip('Show Property Aggregates');
-        this._group.addControl(aggregatesButton);
+        this._aggregatesButton.setToolTip('Show Property Aggregates');
+        group.addControl(this._aggregatesButton);
     }
 
     _removeUI() {
@@ -70,9 +70,9 @@ export class AggregatesExtension extends Autodesk.Viewing.Extension {
             this._aggregatesPanel.setVisible(false);
             this._aggregatesPanel = null;
         }
-        if (this._group) {
-            this.viewer.toolbar.removeControl(this._group);
-            this._group = null;
+        if (this._aggregatesButton) {
+            this.viewer.toolbar.getControl('dashboard-toolbar-group').removeControl(this._aggregatesButton);
+            this._aggregatesButton = null;
         }
     }
 }
