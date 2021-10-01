@@ -114,14 +114,17 @@ class DataGridPanel extends Autodesk.Viewing.UI.DockingPanel {
         this.table = new Tabulator('.datagrid-container', {
             height: '100%',
             layout: 'fitColumns',
+            groupBy: 'material',
             columns: [
+                { title: 'ID', field: 'dbid' },
                 { title: 'Name', field: 'name', width: 150 },
-                { title: 'Age', field: 'age', hozAlign: 'left', formatter: 'progress' },
-                { title: 'Favourite Color', field: 'col' },
-                { title: 'Date Of Birth', field: 'dob', sorter: 'date', hozAlign: 'center' }
+                { title: 'Volume', field: 'volume', hozAlign: 'left', formatter: 'progress' },
+                { title: 'Material', field: 'material' }
             ],
-            rowClick: function (e, row) { //trigger an alert message when the row is clicked
-                alert('Row ' + row.getData().id + ' Clicked!!!!');
+            rowClick: (e, row) => {
+                const { dbid } = row.getData();
+                this.viewer.isolate([dbid]);
+                this.viewer.fitToView([dbid]);
             }
         });
     }
@@ -131,19 +134,19 @@ class DataGridPanel extends Autodesk.Viewing.UI.DockingPanel {
     }
 
     async updateTable(model) {
-        const firstNames = ['Oli', 'Mary', 'Christine', 'Brendon', 'Margret'];
-        const lastNames = ['Bob', 'May', 'Lobowski', 'Philips', 'Marmajuke'];
-        const colors = ['red', 'green', 'blue', 'yellow'];
-        let data = [];
-        for (let i = 0; i < 15; i++) {
-            data.push({
-                id: i + 1,
-                name: firstNames[Math.floor(Math.random() * firstNames.length)] + ' ' + lastNames[Math.floor(Math.random() * lastNames.length)],
-                age: Math.round(Math.random() * 80).toString(),
-                col: colors[Math.floor(Math.random() * colors.length)],
-                dob: `${Math.ceil(Math.random() * 31)}/${Math.ceil(Math.random() * 12)}/${1900 + Math.floor(Math.random() * 100)}`
-            });
-        }
-        this.table.replaceData(data);
+        const getProps = (model, dbids, props) => new Promise(function (resolve, reject) {
+            model.getBulkProperties(dbids, { propFilter: props }, resolve, reject);
+        });
+        const summaryExt = this.viewer.getExtension('SummaryExtension');
+        const dbids = await summaryExt.findLeafNodes(model);
+        const results = await getProps(model, dbids, ['Name', 'Volume', 'Structural Material', 'name']);
+        this.table.replaceData(results.map(result => {
+            return {
+                dbid: result.dbId,
+                name: result.name,
+                volume: result.properties.find(item => item.displayName === 'Volume')?.displayValue,
+                material: result.properties.find(item => item.displayName === 'Structural Material')?.displayValue
+            };
+        }));
     }
 }
