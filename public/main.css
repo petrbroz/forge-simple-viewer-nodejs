@@ -39,7 +39,7 @@ body, html {
     right: 0;
 }
 
-#histogram-barchart-button, #histogram-piechart-button, #aggregates-button {
+#histogram-barchart-button, #histogram-piechart-button, #aggregates-button, #datagrid-button {
     background-size: 24px;
     background-repeat: no-repeat;
     background-position: center;
@@ -54,6 +54,10 @@ body, html {
 }
 
 #aggregates-button {
+    background-image: url(https://github.com/Rush/Font-Awesome-SVG-PNG/raw/master/black/png/24/calculator.png);
+}
+
+#datagrid-button {
     background-image: url(https://github.com/Rush/Font-Awesome-SVG-PNG/raw/master/black/png/24/table.png);
 }
 
