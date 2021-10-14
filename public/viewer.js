@@ -13,7 +13,7 @@ export async function initViewer(container) {
     }
     return new Promise(function (resolve, reject) {
         Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
-            const viewer = new Autodesk.Viewing.GuiViewer3D(container);
+            const viewer = new Autodesk.Viewing.GuiViewer3D(container, { extensions: ['TransformExtension'] });
             viewer.start();
             viewer.setTheme('light-theme');
             resolve(viewer);
