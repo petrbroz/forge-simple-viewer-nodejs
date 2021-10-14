@@ -12,7 +12,6 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
         this._onCameraChange = this._onCameraChange.bind(this);
         this._onControlsChange = this._onControlsChange.bind(this);
         this._onSelectionChange = this._onSelectionChange.bind(this);
-        this._tempMesh = this._makeTempMesh();
 
         this.names = [TransformToolName];
         // Hack: delete functions defined *on the instance* of the tool.
@@ -42,7 +41,7 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
         this._controls.setSize(25.0);
         this._controls.visible = false;
         this._controls.addEventListener('change', this._onControlsChange);
-        this._controls.attach(this._tempMesh);
+        this._controls.attach(new THREE.Object3D()); // haaaack
         this._viewer.select(null);
         this._viewer.addEventListener(Autodesk.Viewing.CAMERA_CHANGE_EVENT, this._onCameraChange);
         this._viewer.addEventListener(Autodesk.Viewing.SELECTION_CHANGED_EVENT, this._onSelectionChange);
@@ -72,31 +71,20 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
 
     handleMouseMove(event) {
         if (this._dragging) {
-            if (this._controls.onPointerMove(event)) {
-                return true;
-            }
-            return false;
+            return this._controls.onPointerMove(event);
+        } else {
+            return this._controls.onPointerHover(event);
         }
-        if (this._controls.onPointerHover(event)) {
-            return true;
-        }
-        return false;
     }
 
     handleButtonDown(event, button) {
         this._dragging = true;
-        if (this._controls.onPointerDown(event)) {
-            return true;
-        }
-        return false;
+        return this._controls.onPointerDown(event);
     }
 
     handleButtonUp(event, button) {
         this._dragging = false;
-        if (this._controls.onPointerUp(event)) {
-            return true;
-        }
-        return false;
+        return this._controls.onPointerUp(event);
     }
 
     handleSingleClick(event, button) {
@@ -109,11 +97,7 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
 
     _onControlsChange(ev) {
         for (const { proxy, offset } of this._fragments) {
-            proxy.position.set(
-                this._controls.position.x - offset.x,
-                this._controls.position.y - offset.y,
-                this._controls.position.z - offset.z
-            );
+            proxy.position.subVectors(this._controls.position, offset);
             proxy.updateAnimTransform();
         }
         this._viewer.impl.invalidate(true, true, true);
@@ -129,9 +113,7 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
             this._controls.visible = true;
             this._fragments = ev.fragIdsArray.map(fragId => {
                 const proxy = this._viewer.impl.getFragmentProxy(ev.model, fragId);
-                if (!proxy.position) {
-                    proxy.position = new THREE.Vector3();
-                }
+                proxy.position = new THREE.Vector3(0, 0, 0);
                 return {
                     proxy,
                     offset: new THREE.Vector3().subVectors(this._controls.position, proxy.position)
@@ -151,13 +133,6 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
             totalBounds.union(fragBounds);
         }
         return totalBounds;
-    }
-
-    _makeTempMesh() {
-        return new THREE.Mesh(
-            new THREE.SphereGeometry(0.0001, 2),
-            new THREE.MeshBasicMaterial()
-        );
     }
 }
 
