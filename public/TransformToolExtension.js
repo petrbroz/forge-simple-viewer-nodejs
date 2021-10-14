@@ -9,6 +9,7 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
         /** @type {Autodesk.Viewing.Viewer3D} */
         this._viewer = null;
         this._fragments = [];
+        this._startPosition = new THREE.Vector3();
         this._onCameraChange = this._onCameraChange.bind(this);
         this._onControlsChange = this._onControlsChange.bind(this);
         this._onSelectionChange = this._onSelectionChange.bind(this);
@@ -96,9 +97,10 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
     }
 
     _onControlsChange(ev) {
-        for (const { proxy, offset } of this._fragments) {
-            proxy.position.subVectors(this._controls.position, offset);
-            proxy.updateAnimTransform();
+        const offset = new THREE.Vector3().subVectors(this._controls.position, this._startPosition);
+        for (const fragment of this._fragments) {
+            fragment.position.copy(offset);
+            fragment.updateAnimTransform();
         }
         this._viewer.impl.invalidate(true, true, true);
     }
@@ -109,15 +111,12 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
         if (selectedIds.length === 1) {
             const bounds = this._computeBounds(ev.model, ev.fragIdsArray);
             this._controls.setPosition(bounds.getCenter());
-            //this._controls.setSize(bounds.getBoundingSphere().radius * 2.0);
+            this._startPosition.copy(this._controls.position);
             this._controls.visible = true;
             this._fragments = ev.fragIdsArray.map(fragId => {
                 const proxy = this._viewer.impl.getFragmentProxy(ev.model, fragId);
                 proxy.position = new THREE.Vector3(0, 0, 0);
-                return {
-                    proxy,
-                    offset: new THREE.Vector3().subVectors(this._controls.position, proxy.position)
-                };
+                return proxy;
             });
         } else {
             this._controls.visible = false;
@@ -126,9 +125,8 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
 
     _computeBounds(model, fragIds) {
         const frags = model.getFragmentList();
-        const totalBounds = new THREE.Box3();
+        const totalBounds = new THREE.Box3(), fragBounds = new THREE.Box3();
         for (const fragId of fragIds) {
-            const fragBounds = new THREE.Box3();
             frags.getWorldBounds(fragId, fragBounds);
             totalBounds.union(fragBounds);
         }
@@ -165,12 +163,13 @@ class TransformExtension extends Autodesk.Viewing.Extension {
             this.viewer.toolbar.addControl(this._group);
             this._button = new Autodesk.Viewing.UI.Button('xform-extension-button');
             this._button.onClick = () => {
-                if (this._button.getState() !== Autodesk.Viewing.UI.Button.State.ACTIVE) {
+                const { ACTIVE, INACTIVE } = Autodesk.Viewing.UI.Button.State;
+                if (this._button.getState() !== ACTIVE) {
                     this._enableTransformTool();
-                    this._button.setState(Autodesk.Viewing.UI.Button.State.ACTIVE);
+                    this._button.setState(ACTIVE);
                 } else {
                     this._disableTransformTool();
-                    this._button.setState(Autodesk.Viewing.UI.Button.State.INACTIVE);
+                    this._button.setState(INACTIVE);
                 }
             };
             this._button.setToolTip('Transform selected objects');
