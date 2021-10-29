@@ -10,8 +10,10 @@ export class HistogramExtension extends Autodesk.Viewing.Extension {
     }
 
     async load() {
-        await this.viewer.loadExtension('SummaryExtension');
-        await this._loadDependencies();
+        await Promise.all([
+            this.viewer.loadExtension('SummaryExtension'),
+            Autodesk.Viewing.Private.theResourceLoader.loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js', 'Chart') // kinda hacky...
+        ]);
         Chart.defaults.plugins.legend.display = false;
         this.viewer.addEventListener(Autodesk.Viewing.OBJECT_TREE_CREATED_EVENT, () => {
             if (this._barChartPanel) {
@@ -33,29 +35,6 @@ export class HistogramExtension extends Autodesk.Viewing.Extension {
 
     onToolbarCreated() {
         this._createUI();
-    }
-
-    async _loadDependencies() {
-        const loadDependency = (src) => new Promise(function (resolve, reject) {
-            if (src.endsWith('.js')) {
-                const el = document.createElement('script');
-                el.type = 'text/javascript';
-                el.src = src;
-                el.onload = resolve;
-                document.head.appendChild(el);
-            } else if (src.endsWith('.css')) {
-                const el = document.createElement('link');
-                el.rel = 'stylesheet';
-                el.href = src;
-                el.onload = resolve;
-                document.head.appendChild(el);
-            } else {
-                reject('Unsupported file extension.');
-            }
-        });
-        if (!window.Chart) {
-            await loadDependency('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js');
-        }
     }
 
     _createUI() {

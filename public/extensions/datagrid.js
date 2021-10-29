@@ -7,8 +7,21 @@ export class DataGridExtension extends Autodesk.Viewing.Extension {
     }
 
     async load() {
-        await this.viewer.loadExtension('SummaryExtension');
-        await this._loadDependencies();
+        const loadCSS = (href) => new Promise(function (resolve, reject) {
+            const el = document.createElement('link');
+            el.rel = 'stylesheet';
+            el.href = href;
+            el.onload = resolve;
+            el.onerror = reject;
+            document.head.appendChild(el);
+        });
+
+        await Promise.all([
+            this.viewer.loadExtension('SummaryExtension'),
+            Autodesk.Viewing.Private.theResourceLoader.loadScript('https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js', 'moment'), // kinda hacky...
+            Autodesk.Viewing.Private.theResourceLoader.loadScript('https://unpkg.com/tabulator-tables@4.9.3/dist/js/tabulator.min.js', 'Tabulator'), // kinda hacky...
+            loadCSS('https://unpkg.com/tabulator-tables@4.9.3/dist/css/tabulator.min.css') // kinda hacky...
+        ]);
         this.viewer.addEventListener(Autodesk.Viewing.OBJECT_TREE_CREATED_EVENT, () => {
             if (this._dataGridPanel) {
                 this._dataGridPanel.setModel(this.viewer.model);
@@ -26,33 +39,6 @@ export class DataGridExtension extends Autodesk.Viewing.Extension {
 
     onToolbarCreated() {
         this._createUI();
-    }
-
-    async _loadDependencies() {
-        const loadDependency = (src) => new Promise(function (resolve, reject) {
-            if (src.endsWith('.js')) {
-                const el = document.createElement('script');
-                el.type = 'text/javascript';
-                el.src = src;
-                el.onload = resolve;
-                document.head.appendChild(el);
-            } else if (src.endsWith('.css')) {
-                const el = document.createElement('link');
-                el.rel = 'stylesheet';
-                el.href = src;
-                el.onload = resolve;
-                document.head.appendChild(el);
-            } else {
-                reject('Unsupported file extension.');
-            }
-        });
-        if (!window.Tabulator) {
-            await loadDependency('https://unpkg.com/tabulator-tables/dist/css/tabulator.min.css');
-            await loadDependency('https://unpkg.com/tabulator-tables/dist/js/tabulator.min.js');
-        }
-        if (!window.moment) {
-            await loadDependency('https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js');
-        }
     }
 
     _createUI() {
