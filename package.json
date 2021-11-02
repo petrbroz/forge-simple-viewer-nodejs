@@ -17,6 +17,6 @@
     "forge-apis": "^0.8.6"
   },
   "devDependencies": {
-    "@types/forge-viewer": "^7.48.0"
+    "@types/forge-viewer": "^7.55.0"
   }
 }

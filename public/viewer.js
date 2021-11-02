@@ -1,6 +1,11 @@
 /// import * as Autodesk from "@types/forge-viewer";
 
-export async function initViewer(container) {
+/**
+ * Initializes new viewer.
+ * @param {HTMLElement} container Container element.
+ * @returns {Promise<Autodesk.Viewing.GuiViewer3D>}
+ */
+export async function initViewer(container, extensions) {
     async function getAccessToken(callback) {
         const resp = await fetch('/api/auth/token');
         if (resp.ok) {
@@ -13,7 +18,7 @@ export async function initViewer(container) {
     }
     return new Promise(function (resolve, reject) {
         Autodesk.Viewing.Initializer({ getAccessToken }, async function () {
-            const viewer = new Autodesk.Viewing.GuiViewer3D(container);
+            const viewer = new Autodesk.Viewing.GuiViewer3D(container, { extensions });
             viewer.start();
             viewer.setTheme('light-theme');
             resolve(viewer);
@@ -22,12 +27,13 @@ export async function initViewer(container) {
 }
 
 export function loadModel(viewer, urn) {
-    function onDocumentLoadSuccess(doc) {
-        viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
-    }
-    function onDocumentLoadFailure(code, message) {
-        alert('Could not load model. See the console for more details.');
-        console.error(message);
-    }
-    Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
+    return new Promise(function (resolve, reject) {
+        function onDocumentLoadSuccess(doc) {
+            viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry()).then(model => resolve(model));
+        }
+        function onDocumentLoadFailure(code, message) {
+            reject(message);
+        }
+        Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
+    });
 }
