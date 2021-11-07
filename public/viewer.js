@@ -21,13 +21,16 @@ export async function initViewer(container) {
     });
 }
 
-export function loadModel(viewer, urn) {
-    function onDocumentLoadSuccess(doc) {
-        viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry());
-    }
-    function onDocumentLoadFailure(code, message) {
-        alert('Could not load model. See the console for more details.');
-        console.error(message);
-    }
-    Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
+export function loadModel(viewer, urn, options) {
+    return new Promise(function (resolve, reject) {
+        function onDocumentLoadSuccess(doc) {
+            viewer.loadDocumentNode(doc, doc.getRoot().getDefaultGeometry(), options)
+                .then(model => resolve(model))
+                .catch(reject);
+        }
+        function onDocumentLoadFailure(code, message) {
+            reject(message);
+        }
+        Autodesk.Viewing.Document.load('urn:' + urn, onDocumentLoadSuccess, onDocumentLoadFailure);
+    });
 }
