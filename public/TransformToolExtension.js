@@ -1,19 +1,26 @@
 const TransformToolName = 'xform-tool';
 const TransformToolOverlay = 'xform-tool-overlay';
+const TransformToolMode = {
+    MODEL: 'move-model',
+    OBJECT: 'move-object'
+};
 
 class TransformTool extends Autodesk.Viewing.ToolInterface {
-    constructor() {
+    constructor(mode) {
         super();
         /** @type {THREE.TransformControls} */
         this._controls = null;
         /** @type {Autodesk.Viewing.Viewer3D} */
         this._viewer = null;
         this._fragments = [];
+        this._model = null;
         this._startPosition = new THREE.Vector3();
+        this._startTransform = null;
         this._onCameraChange = this._onCameraChange.bind(this);
         this._onControlsChange = this._onControlsChange.bind(this);
         this._onSelectionChange = this._onSelectionChange.bind(this);
 
+        this.mode = mode;
         this.names = [TransformToolName];
         // Hack: delete functions defined *on the instance* of the tool.
         // We want the tool controller to call our class methods instead.
@@ -98,9 +105,20 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
 
     _onControlsChange(ev) {
         const offset = new THREE.Vector3().subVectors(this._controls.position, this._startPosition);
-        for (const fragment of this._fragments) {
-            fragment.position.copy(offset);
-            fragment.updateAnimTransform();
+        switch (this.mode) {
+            case TransformToolMode.MODEL:
+                const xform = this._startTransform.clone();
+                xform.elements[12] += offset.x;
+                xform.elements[13] += offset.y;
+                xform.elements[14] += offset.z;
+                this._model.setPlacementTransform(xform);
+                break;
+            case TransformToolMode.OBJECT:
+                for (const fragment of this._fragments) {
+                    fragment.position.copy(offset);
+                    fragment.updateAnimTransform();
+                }
+                break;
         }
         this._viewer.impl.invalidate(true, true, true);
     }
@@ -109,21 +127,31 @@ class TransformTool extends Autodesk.Viewing.ToolInterface {
         this._fragments = [];
         const selectedIds = this._viewer.getSelection();
         if (selectedIds.length === 1) {
-            const bounds = this._computeBounds(ev.model, ev.fragIdsArray);
-            this._controls.setPosition(bounds.getCenter());
+            switch (this.mode) {
+                case TransformToolMode.MODEL:
+                    const modelBounds = ev.model.getBoundingBox();
+                    this._controls.setPosition(modelBounds.getCenter());
+                    this._model = ev.model;
+                    break;
+                case TransformToolMode.OBJECT:
+                    const objectBounds = this._computeObjectBounds(ev.model, ev.fragIdsArray);
+                    this._controls.setPosition(objectBounds.getCenter());
+                    this._fragments = ev.fragIdsArray.map(fragId => {
+                        const proxy = this._viewer.impl.getFragmentProxy(ev.model, fragId);
+                        proxy.position = new THREE.Vector3(0, 0, 0);
+                        return proxy;
+                    });
+                    break;
+            }
             this._startPosition.copy(this._controls.position);
+            this._startTransform = ev.model.getPlacementTransform().clone();
             this._controls.visible = true;
-            this._fragments = ev.fragIdsArray.map(fragId => {
-                const proxy = this._viewer.impl.getFragmentProxy(ev.model, fragId);
-                proxy.position = new THREE.Vector3(0, 0, 0);
-                return proxy;
-            });
         } else {
             this._controls.visible = false;
         }
     }
 
-    _computeBounds(model, fragIds) {
+    _computeObjectBounds(model, fragIds) {
         const frags = model.getFragmentList();
         const totalBounds = new THREE.Box3(), fragBounds = new THREE.Box3();
         for (const fragId of fragIds) {
@@ -140,6 +168,7 @@ class TransformExtension extends Autodesk.Viewing.Extension {
         this._group = null;
         this._button = null;
         this._tool = null;
+        this._mode = options?.mode || TransformToolMode.OBJECT;
     }
 
     load() {
@@ -187,7 +216,7 @@ class TransformExtension extends Autodesk.Viewing.Extension {
     _enableTransformTool() {
         const controller = this.viewer.toolController;
         if (!this._tool) {
-            this._tool = new TransformTool();
+            this._tool = new TransformTool(this._mode);
             controller.registerTool(this._tool);
         }
         if (!controller.isToolActivated(TransformToolName)) {
