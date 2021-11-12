@@ -3,8 +3,6 @@ const PORT = process.env.PORT || 3000;
 
 let app = express();
 app.use(express.static('public'));
-app.use('/api/auth', require('./routes/auth.js'));
-app.use('/api/models', require('./routes/models.js'));
 app.use(function (err, req, res, next) {
     console.error(err);
     res.status(500).send(err.message);

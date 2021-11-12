@@ -6,18 +6,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.css">
-    <link rel="stylesheet" href="/main.css">
-    <title>Autodesk Forge: Simple Viewer</title>
+    <title>Autodesk Forge: Native DWF</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+
+        #preview {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="header">
-        <img class="logo" src="/logo.png" alt="Autodesk Forge">
-        <span class="title">Simple Viewer</span>
-    </div>
     <div id="preview"></div>
     <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script>
-    <script src="/main.js" type="module"></script>
+    <script>
+        Autodesk.Viewing.Initializer({ accessToken: '' }, async function () {
+            const viewer = new Autodesk.Viewing.GuiViewer3D(document.getElementById('preview'));
+            viewer.start();
+            viewer.loadExtension('Autodesk.DWF').then(() => {
+                viewer.loadModel('/sportscar.dwfx');
+            });
+        });
+    </script>
 </body>
 
 </html>

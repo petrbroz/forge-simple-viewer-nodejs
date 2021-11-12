@@ -16,12 +16,4 @@ or [macOS Terminal](https://support.apple.com/guide/terminal/welcome/mac))
 
 - Clone this repository
 - Install dependencies: `yarn install` or `npm install`
-- Setup environment variables:
-  - `FORGE_CLIENT_ID` - your Forge application client ID
-  - `FORGE_CLIENT_SECRET` - your Forge application client secret
-  - `FORGE_BUCKET` (optional) - name of Forge bucket to store your designs in
 - Run the server: `npm start`
-
-> When using [Visual Studio Code](https://code.visualstudio.com),
-you can specify the env. variables listed above in a _.env_ file in this
-folder, and run & debug the application directly from the editor.
