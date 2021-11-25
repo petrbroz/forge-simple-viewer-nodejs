@@ -7,18 +7,18 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.css">
     <link rel="stylesheet" href="/main.css">
-    <title>Autodesk Forge: Simple Viewer</title>
+    <title>Autodesk Forge: Multiple Viewers</title>
 </head>
 
 <body>
     <div id="header">
         <img class="logo" src="/logo.png" alt="Autodesk Forge">
-        <span class="title">Simple Viewer</span>
-        <select name="models" id="models"></select>
-        <button id="upload" title="Upload New Model">Upload</button>
-        <input style="display: none" type="file" id="input">
+        <span class="title">Multiple Viewers</span>
+        <select name="models1" id="models1"></select>
+        <select name="models2" id="models2"></select>
     </div>
-    <div id="preview"></div>
+    <div class="preview" id="preview1"></div>
+    <div class="preview" id="preview2"></div>
     <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script>
     <script src="/main.js" type="module"></script>
 </body>

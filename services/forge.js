@@ -1,5 +1,4 @@
-const fs = require('fs');
-const { AuthClientTwoLegged, BucketsApi, ObjectsApi, DerivativesApi } = require('forge-apis');
+const { AuthClientTwoLegged, BucketsApi, ObjectsApi } = require('forge-apis');
 
 const { FORGE_CLIENT_ID, FORGE_CLIENT_SECRET, FORGE_BUCKET } = process.env;
 if (!FORGE_CLIENT_ID || !FORGE_CLIENT_SECRET) {
@@ -58,28 +57,7 @@ async function listModels() {
     }));
 }
 
-async function uploadModel(objectName, filePath, rootFilename) {
-    await ensureBucketExists(); // Remove this if we can assume the bucket to exist
-    const token = await getInternalToken();
-    const buffer = fs.readFileSync(filePath);
-    const response = await new ObjectsApi().uploadObject(BUCKET, objectName, buffer.byteLength, buffer, {}, null, token);
-    const job = {
-        input: {
-            urn: urnify(response.body.objectId)
-        },
-        output: {
-            formats: [{ type: 'svf', views: ['2d', '3d'] }]
-        }
-    };
-    if (rootFilename) {
-        job.input.compressedUrn = true;
-        job.input.rootFilename = rootFilename;
-    }
-    await new DerivativesApi().translate(job, {}, null, token);
-}
-
 module.exports = {
     getPublicToken,
-    listModels,
-    uploadModel
+    listModels
 };

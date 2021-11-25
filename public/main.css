@@ -17,9 +17,19 @@ body, html {
     align-items: center;
 }
 
-#preview {
+.preview {
+    position: absolute;
     top: 3em;
     bottom: 0;
+    width: 50%;
+}
+
+#preview1 {
+    left: 0;
+}
+
+#preview2 {
+    right: 0;
 }
 
 #header > * {
