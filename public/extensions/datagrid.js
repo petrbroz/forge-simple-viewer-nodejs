@@ -136,3 +136,5 @@ class DataGridPanel extends Autodesk.Viewing.UI.DockingPanel {
         }));
     }
 }
+
+Autodesk.Viewing.theExtensionManager.registerExtension('DataGridExtension', DataGridExtension);

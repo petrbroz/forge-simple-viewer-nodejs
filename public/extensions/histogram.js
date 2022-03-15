@@ -142,8 +142,8 @@ class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
 
     async setModel(model) {
         const summaryExt = this.viewer.getExtension('SummaryExtension');
-        const properties = await summaryExt.findAllProperties(model);
-        this.select.innerHTML = properties.map(prop => `<option value="${prop}">${prop}</option>`).join('\n');
+        const propertyNames = await summaryExt.findPropertyNames(model);
+        this.select.innerHTML = propertyNames.map(prop => `<option value="${prop}">${prop}</option>`).join('\n');
         this.select.onchange = () => this.updateChart(model, this.select.value);
         this.updateChart(model, this.select.value);
     }
@@ -171,3 +171,5 @@ class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
         };
     }
 }
+
+Autodesk.Viewing.theExtensionManager.registerExtension('HistogramExtension', HistogramExtension);

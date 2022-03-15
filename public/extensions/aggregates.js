@@ -113,3 +113,5 @@ class AggregatesPanel extends Autodesk.Viewing.UI.PropertyPanel {
         }
     }
 }
+
+Autodesk.Viewing.theExtensionManager.registerExtension('AggregatesExtension', AggregatesExtension);
