@@ -2,6 +2,7 @@ class AggregatesExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
         this._aggregatesButton = null;
+        this._aggregatesPanel = null;
         // For now, the names of properties we want to compute the aggregates for are hard-coded.
         // In future these could be retrieved via the extension `options`, or perhaps set in the UI.
         this._properties = ['Length', 'Area', 'Volume', 'Density', 'Mass', 'Price'];
@@ -9,7 +10,6 @@ class AggregatesExtension extends Autodesk.Viewing.Extension {
     }
 
     async load() {
-        await this.viewer.loadExtension('SummaryExtension');
         this.viewer.addEventListener(Autodesk.Viewing.SELECTION_CHANGED_EVENT, this.update);
         this.viewer.addEventListener(Autodesk.Viewing.ISOLATE_EVENT, this.update);
         console.log('AggregatesExtension loaded.');

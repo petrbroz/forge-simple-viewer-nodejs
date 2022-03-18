@@ -10,10 +10,7 @@ class HistogramExtension extends Autodesk.Viewing.Extension {
     }
 
     async load() {
-        await Promise.all([
-            this.viewer.loadExtension('SummaryExtension'),
-            Autodesk.Viewing.Private.theResourceLoader.loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js', 'Chart') // kinda hacky...
-        ]);
+        await Autodesk.Viewing.Private.theResourceLoader.loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js', 'Chart'); // kinda hacky...
         Chart.defaults.plugins.legend.display = false;
         this.viewer.addEventListener(Autodesk.Viewing.OBJECT_TREE_CREATED_EVENT, () => {
             if (this._barChartPanel) {
