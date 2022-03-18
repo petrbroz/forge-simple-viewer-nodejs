@@ -1,6 +1,9 @@
 /// import * as Autodesk from "@types/forge-viewer";
 
 import './extensions/summary.js';
+import './extensions/aggregates.js';
+import './extensions/datagrid.js';
+import './extensions/histogram.js';
 
 async function getAccessToken(callback) {
     try {
