@@ -1,5 +1,5 @@
 // Viewer extension providing a datagrid UI via a 3rd party library (http://tabulator.info)
-export class DataGridExtension extends Autodesk.Viewing.Extension {
+class DataGridExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
         this._dataGridButton = null;

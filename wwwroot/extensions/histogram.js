@@ -1,6 +1,6 @@
 /// import * as Chart from "@types/chart.js";
 
-export class HistogramExtension extends Autodesk.Viewing.Extension {
+class HistogramExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
         this._barChartButton = null;

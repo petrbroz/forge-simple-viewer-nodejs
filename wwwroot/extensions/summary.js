@@ -1,4 +1,4 @@
-export class SummaryExtension extends Autodesk.Viewing.Extension {
+class SummaryExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
     }

@@ -1,4 +1,4 @@
-export class AggregatesExtension extends Autodesk.Viewing.Extension {
+class AggregatesExtension extends Autodesk.Viewing.Extension {
     constructor(viewer, options) {
         super(viewer, options);
         this._aggregatesButton = null;
