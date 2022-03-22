@@ -52,7 +52,7 @@ class AggregatesExtension extends Autodesk.Viewing.Extension {
         this._aggregatesButton = new Autodesk.Viewing.UI.Button('aggregates-button');
         this._aggregatesButton.onClick = () => {
             if (!this._aggregatesPanel) {
-                this._aggregatesPanel = new AggregatesPanel(this.viewer, 'aggregates-barchart', 'Property Aggregates');
+                this._aggregatesPanel = new AggregatesPanel(this.viewer, 'aggregates-barchart', 'Model Summary');
                 if (this.viewer.model) {
                     this.update();
                 }
@@ -61,7 +61,7 @@ class AggregatesExtension extends Autodesk.Viewing.Extension {
             const { ACTIVE, INACTIVE } = Autodesk.Viewing.UI.Button.State;
             this._aggregatesButton.setState(this._aggregatesPanel.isVisible() ? ACTIVE : INACTIVE);
         };
-        this._aggregatesButton.setToolTip('Show Property Aggregates');
+        this._aggregatesButton.setToolTip('Show Model Summary');
         group.addControl(this._aggregatesButton);
     }
 
