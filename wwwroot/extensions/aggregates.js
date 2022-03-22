@@ -63,6 +63,17 @@ class AggregatesExtension extends Autodesk.Viewing.Extension {
         };
         this._aggregatesButton.setToolTip('Show Model Summary');
         group.addControl(this._aggregatesButton);
+
+        const style = document.createElement('style');
+        style.innerText = `
+            #aggregates-button {
+                background-image: url(https://img.icons8.com/small/32/brief.png);
+                background-size: 24px;
+                background-repeat: no-repeat;
+                background-position: center;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     _removeUI() {

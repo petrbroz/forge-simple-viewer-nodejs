@@ -61,6 +61,17 @@ class DataGridExtension extends Autodesk.Viewing.Extension {
         };
         this._dataGridButton.setToolTip('Show Data Grid');
         group.addControl(this._dataGridButton);
+
+        const style = document.createElement('style');
+        style.innerText = `
+            #datagrid-button {
+                background-image: url(https://img.icons8.com/small/32/activity-grid.png);
+                background-size: 24px;
+                background-repeat: no-repeat;
+                background-position: center;
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     _removeUI() {
