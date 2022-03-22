@@ -3,6 +3,7 @@ class AggregatesExtension extends Autodesk.Viewing.Extension {
         super(viewer, options);
         this._aggregatesButton = null;
         this._aggregatesPanel = null;
+        this._style = null;
         // For now, the names of properties we want to compute the aggregates for are hard-coded.
         // In future these could be retrieved via the extension `options`, or perhaps set in the UI.
         this._properties = ['Length', 'Area', 'Volume', 'Density', 'Mass', 'Price'];
@@ -64,8 +65,8 @@ class AggregatesExtension extends Autodesk.Viewing.Extension {
         this._aggregatesButton.setToolTip('Show Model Summary');
         group.addControl(this._aggregatesButton);
 
-        const style = document.createElement('style');
-        style.innerText = `
+        this._style = document.createElement('style');
+        this._style.innerText = `
             #aggregates-button {
                 background-image: url(https://img.icons8.com/small/32/brief.png);
                 background-size: 24px;
@@ -73,17 +74,22 @@ class AggregatesExtension extends Autodesk.Viewing.Extension {
                 background-position: center;
             }
         `;
-        document.head.appendChild(style);
+        document.head.appendChild(this._style);
     }
 
     _removeUI() {
         if (this._aggregatesPanel) {
             this._aggregatesPanel.setVisible(false);
+            this._aggregatesPanel.uninitialize();
             this._aggregatesPanel = null;
         }
         if (this._aggregatesButton) {
             this.viewer.toolbar.getControl('dashboard-toolbar-group').removeControl(this._aggregatesButton);
             this._aggregatesButton = null;
+        }
+        if (this._style) {
+            document.head.removeChild(this._style);
+            this._style = null;
         }
     }
 }

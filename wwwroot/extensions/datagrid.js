@@ -4,6 +4,7 @@ class DataGridExtension extends Autodesk.Viewing.Extension {
         super(viewer, options);
         this._dataGridButton = null;
         this._dataGridPanel = null;
+        this._style = null;
     }
 
     async load() {
@@ -62,8 +63,8 @@ class DataGridExtension extends Autodesk.Viewing.Extension {
         this._dataGridButton.setToolTip('Show Data Grid');
         group.addControl(this._dataGridButton);
 
-        const style = document.createElement('style');
-        style.innerText = `
+        this._style = document.createElement('style');
+        this._style.innerText = `
             #datagrid-button {
                 background-image: url(https://img.icons8.com/small/32/activity-grid.png);
                 background-size: 24px;
@@ -71,7 +72,7 @@ class DataGridExtension extends Autodesk.Viewing.Extension {
                 background-position: center;
             }
         `;
-        document.head.appendChild(style);
+        document.head.appendChild(this._style);
     }
 
     _removeUI() {
@@ -83,6 +84,10 @@ class DataGridExtension extends Autodesk.Viewing.Extension {
         if (this._dataGridButton) {
             this.viewer.toolbar.getControl('dashboard-toolbar-group').removeControl(this._dataGridButton);
             this._dataGridButton = null;
+        }
+        if (this._style) {
+            document.head.removeChild(this._style);
+            this._style = null;
         }
     }
 }
