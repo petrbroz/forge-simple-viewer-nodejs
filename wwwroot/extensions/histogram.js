@@ -1,95 +1,34 @@
 /// import * as Chart from "@types/chart.js";
 
-class HistogramExtension extends Autodesk.Viewing.Extension {
+import { BaseExtension } from './base.js';
+
+class HistogramExtension extends BaseExtension {
     constructor(viewer, options) {
         super(viewer, options);
         this._barChartButton = null;
         this._pieChartButton = null;
         this._barChartPanel = null;
         this._pieChartPanel = null;
-        this._style = null;
     }
 
     async load() {
-        await Autodesk.Viewing.Private.theResourceLoader.loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js', 'Chart'); // kinda hacky...
+        super.load();
+        await this.loadScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.1/chart.min.js', 'Chart');
         Chart.defaults.plugins.legend.display = false;
-        this.viewer.addEventListener(Autodesk.Viewing.OBJECT_TREE_CREATED_EVENT, () => {
-            if (this._barChartPanel) {
-                this._barChartPanel.setModel(this.viewer.model);
-            }
-            if (this._pieChartPanel) {
-                this._pieChartPanel.setModel(this.viewer.model);
-            }
-        });
         console.log('HistogramExtension loaded.');
         return true;
     }
 
-    async unload() {
-        this._removeUI();
-        console.log('HistogramExtension unloaded.');
-        return true;
-    }
-
-    onToolbarCreated() {
-        this._createUI();
-    }
-
-    _createUI() {
-        let group = this.viewer.toolbar.getControl('dashboard-toolbar-group');
-        if (!group) {
-            group = new Autodesk.Viewing.UI.ControlGroup('dashboard-toolbar-group');
-            this.viewer.toolbar.addControl(group);
+    unload() {
+        super.unload();
+        if (this._barChartButton) {
+            this.removeToolbarButton(this._barChartButton);
+            this._barChartButton = null;
         }
-
-        this._barChartButton = new Autodesk.Viewing.UI.Button('histogram-barchart-button');
-        this._barChartButton.onClick = () => {
-            if (!this._barChartPanel) {
-                this._barChartPanel = new ChartPanel(this.viewer, 'histogram-barchart', 'Property Histogram', { x: 10, y: 10, chartType: 'bar' });
-                if (this.viewer.model) {
-                    this._barChartPanel.setModel(this.viewer.model);
-                }
-            }
-            this._barChartPanel.setVisible(!this._barChartPanel.isVisible());
-            const { ACTIVE, INACTIVE } = Autodesk.Viewing.UI.Button.State;
-            this._barChartButton.setState(this._barChartPanel.isVisible() ? ACTIVE : INACTIVE);
-        };
-        this._barChartButton.setToolTip('Show Property Histogram (Bar Chart)');
-        group.addControl(this._barChartButton);
-
-        this._pieChartButton = new Autodesk.Viewing.UI.Button('histogram-piechart-button');
-        this._pieChartButton.onClick = () => {
-            if (!this._pieChartPanel) {
-                this._pieChartPanel = new ChartPanel(this.viewer, 'histogram-piechart', 'Property Histogram', { x: 10, y: 420, chartType: 'doughnut' });
-                if (this.viewer.model) {
-                    this._pieChartPanel.setModel(this.viewer.model);
-                }
-            }
-            this._pieChartPanel.setVisible(!this._pieChartPanel.isVisible());
-            this._pieChartButton.setState(this._pieChartPanel.isVisible() ? Autodesk.Viewing.UI.Button.State.ACTIVE : Autodesk.Viewing.UI.Button.State.INACTIVE);
-        };
-        this._pieChartButton.setToolTip('Show Property Histogram (Pie Chart)');
-        group.addControl(this._pieChartButton);
-
-        this._style = document.createElement('style');
-        this._style.innerText = `
-            #histogram-barchart-button {
-                background-image: url(https://img.icons8.com/small/32/bar-chart.png);
-                background-size: 24px;
-                background-repeat: no-repeat;
-                background-position: center;
-            }
-            #histogram-piechart-button {
-                background-image: url(https://img.icons8.com/small/32/pie-chart.png);
-                background-size: 24px;
-                background-repeat: no-repeat;
-                background-position: center;
-            }
-        `;
-        document.head.appendChild(this._style);
-    }
-
-    _removeUI() {
+        if (this._pieChartButton) {
+            this.removeToolbarButton(this._pieChartButton);
+            this._pieChartButton = null;
+        }
         if (this._barChartPanel) {
             this._barChartPanel.setVisible(false);
             this._barChartPanel.uninitialize();
@@ -100,17 +39,38 @@ class HistogramExtension extends Autodesk.Viewing.Extension {
             this._pieChartPanel.uninitialize();
             this._pieChartPanel = null;
         }
-        if (this._barChartButton) {
-            this.viewer.toolbar.getControl('dashboard-toolbar-group').removeControl(this._barChartButton);
-            this._barChartButton = null;
+        console.log('HistogramExtension unloaded.');
+        return true;
+    }
+
+    onToolbarCreated() {
+        this._barChartPanel = new ChartPanel(this.viewer, 'histogram-barchart', 'Property Histogram', { x: 10, y: 10, chartType: 'bar' });
+        this._pieChartPanel = new ChartPanel(this.viewer, 'histogram-piechart', 'Property Histogram', { x: 10, y: 420, chartType: 'doughnut' });
+        this._barChartButton = this.createToolbarButton('histogram-barchart-button', 'https://img.icons8.com/small/32/bar-chart.png', 'Show Property Histogram (Bar Chart)');
+        this._barChartButton.onClick = () => {
+            this._barChartPanel.setVisible(!this._barChartPanel.isVisible());
+            this._barChartButton.setState(this._barChartPanel.isVisible() ? Autodesk.Viewing.UI.Button.State.ACTIVE : Autodesk.Viewing.UI.Button.State.INACTIVE);
+            if (this.viewer.model) {
+                this._barChartPanel.setModel(this.viewer.model);
+            }
+        };
+        this._pieChartButton = this.createToolbarButton('histogram-piechart-button', 'https://img.icons8.com/small/32/pie-chart.png', 'Show Property Histogram (Pie Chart)');
+        this._pieChartButton.onClick = () => {
+            this._pieChartPanel.setVisible(!this._pieChartPanel.isVisible());
+            this._pieChartButton.setState(this._pieChartPanel.isVisible() ? Autodesk.Viewing.UI.Button.State.ACTIVE : Autodesk.Viewing.UI.Button.State.INACTIVE);
+            if (this.viewer.model) {
+                this._pieChartPanel.setModel(this.viewer.model);
+            }
+        };
+    }
+
+    onModelLoaded() {
+        super.onModelLoaded();
+        if (this._barChartPanel) {
+            this._barChartPanel.setModel(this.viewer.model);
         }
-        if (this._pieChartButton) {
-            this.viewer.toolbar.getControl('dashboard-toolbar-group').removeControl(this._pieChartButton);
-            this._pieChartButton = null;
-        }
-        if (this._style) {
-            document.head.removeChild(this._style);
-            this._style = null;
+        if (this._pieChartPanel) {
+            this._pieChartPanel.setModel(this.viewer.model);
         }
     }
 }
