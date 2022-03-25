@@ -1,3 +1,4 @@
+/// import * as Autodesk from "@types/forge-viewer";
 /// import * as Chart from "@types/chart.js";
 
 import { BaseExtension } from './base.js';
@@ -21,64 +22,55 @@ class HistogramExtension extends BaseExtension {
 
     unload() {
         super.unload();
-        if (this._barChartButton) {
-            this.removeToolbarButton(this._barChartButton);
-            this._barChartButton = null;
+        for (const button of [this._barChartButton, this._pieChartButton]) {
+            this.removeToolbarButton(button);
         }
-        if (this._pieChartButton) {
-            this.removeToolbarButton(this._pieChartButton);
-            this._pieChartButton = null;
+        this._barChartButton = this._pieChartButton = null;
+        for (const panel of [this._barChartPanel, this._pieChartPanel]) {
+            panel.setVisible(false);
+            panel.uninitialize();
         }
-        if (this._barChartPanel) {
-            this._barChartPanel.setVisible(false);
-            this._barChartPanel.uninitialize();
-            this._barChartPanel = null;
-        }
-        if (this._pieChartPanel) {
-            this._pieChartPanel.setVisible(false);
-            this._pieChartPanel.uninitialize();
-            this._pieChartPanel = null;
-        }
+        this._barChartPanel = this._pieChartPanel = null;
         console.log('HistogramExtension unloaded.');
         return true;
     }
 
     onToolbarCreated() {
-        this._barChartPanel = new ChartPanel(this.viewer, 'histogram-barchart', 'Property Histogram', { x: 10, y: 10, chartType: 'bar' });
-        this._pieChartPanel = new ChartPanel(this.viewer, 'histogram-piechart', 'Property Histogram', { x: 10, y: 420, chartType: 'doughnut' });
-        this._barChartButton = this.createToolbarButton('histogram-barchart-button', 'https://img.icons8.com/small/32/bar-chart.png', 'Show Property Histogram (Bar Chart)');
+        this._barChartPanel = new ChartPanel(this, 'dashboard-barchart-panel', 'Property Histogram', { x: 10, y: 10, chartType: 'bar' });
+        this._pieChartPanel = new ChartPanel(this, 'dashboard-piechart-panel', 'Property Histogram', { x: 10, y: 420, chartType: 'doughnut' });
+        this._barChartButton = this.createToolbarButton('dashboard-barchart-button', 'https://img.icons8.com/small/32/bar-chart.png', 'Show Property Histogram (Bar Chart)');
         this._barChartButton.onClick = () => {
             this._barChartPanel.setVisible(!this._barChartPanel.isVisible());
             this._barChartButton.setState(this._barChartPanel.isVisible() ? Autodesk.Viewing.UI.Button.State.ACTIVE : Autodesk.Viewing.UI.Button.State.INACTIVE);
-            if (this.viewer.model) {
+            if (this._barChartPanel.isVisible() && this.viewer.model) {
                 this._barChartPanel.setModel(this.viewer.model);
             }
         };
-        this._pieChartButton = this.createToolbarButton('histogram-piechart-button', 'https://img.icons8.com/small/32/pie-chart.png', 'Show Property Histogram (Pie Chart)');
+        this._pieChartButton = this.createToolbarButton('dashboard-piechart-button', 'https://img.icons8.com/small/32/pie-chart.png', 'Show Property Histogram (Pie Chart)');
         this._pieChartButton.onClick = () => {
             this._pieChartPanel.setVisible(!this._pieChartPanel.isVisible());
             this._pieChartButton.setState(this._pieChartPanel.isVisible() ? Autodesk.Viewing.UI.Button.State.ACTIVE : Autodesk.Viewing.UI.Button.State.INACTIVE);
-            if (this.viewer.model) {
+            if (this._pieChartPanel.isVisible() && this.viewer.model) {
                 this._pieChartPanel.setModel(this.viewer.model);
             }
         };
     }
 
-    onModelLoaded() {
-        super.onModelLoaded();
-        if (this._barChartPanel) {
-            this._barChartPanel.setModel(this.viewer.model);
+    onModelLoaded(model) {
+        super.onModelLoaded(model);
+        if (this._barChartPanel && this._barChartPanel.isVisible()) {
+            this._barChartPanel.setModel(model);
         }
-        if (this._pieChartPanel) {
-            this._pieChartPanel.setModel(this.viewer.model);
+        if (this._pieChartPanel && this._pieChartPanel.isVisible()) {
+            this._pieChartPanel.setModel(model);
         }
     }
 }
 
 class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
-    constructor(viewer, id, title, options) {
-        super(viewer.container, id, title, options);
-        this.viewer = viewer;
+    constructor(extension, id, title, options) {
+        super(extension.viewer.container, id, title, options);
+        this.extension = extension;
         this.container.style.left = (options.x || 0) + 'px';
         this.container.style.top = (options.y || 0) + 'px';
         this.container.style.width = (options.width || 500) + 'px';
@@ -120,16 +112,14 @@ class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
     }
 
     async setModel(model) {
-        const summaryExt = this.viewer.getExtension('SummaryExtension');
-        const propertyNames = await summaryExt.findPropertyNames(model);
+        const propertyNames = await this.extension.findPropertyNames(model);
         this.select.innerHTML = propertyNames.map(prop => `<option value="${prop}">${prop}</option>`).join('\n');
         this.select.onchange = () => this.updateChart(model, this.select.value);
         this.updateChart(model, this.select.value);
     }
 
     async updateChart(model, propName) {
-        const summaryExt = this.viewer.getExtension('SummaryExtension');
-        const histogram = await summaryExt.computePropertyHistogram(model, propName);
+        const histogram = await this.extension.findPropertyValueOccurrences(model, propName);
         const propertyValues = Array.from(histogram.keys());
         this.chart.data.labels = propertyValues;
         const dataset = this.chart.data.datasets[0];
@@ -144,8 +134,8 @@ class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {
             if (items.length === 1) {
                 const index = items[0].index;
                 const dbids = histogram.get(propertyValues[index]);
-                this.viewer.isolate(dbids);
-                this.viewer.fitToView(dbids);
+                this.extension.viewer.isolate(dbids);
+                this.extension.viewer.fitToView(dbids);
             }
         };
     }
