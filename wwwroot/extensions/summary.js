@@ -74,6 +74,35 @@ class SummaryExtension extends BaseExtension {
             }
         }
     }
+
+    /**
+     * Aggregates values of a specific property from a range of objects, using a specific aggregating function.
+     * @async
+     * @param {Autodesk.Viewing.Model} model Forge model.
+     * @param {number[]} [dbids] Optional list of object IDs to include in the aggregation (by default, all objects are included).
+     * @param {string} propertyName Name of property whose values will be aggregated.
+     * @param {(aggregateValue: number, currentValue: number, property) => number} aggregateFunc Aggregating function for the property values.
+     * For example, `(sum, current, prop) => { return sum + current; }`.
+     * @param {number} initialValue Initial value for the aggregating function.
+     * @returns {Promise<number>} Final aggregated value.
+     */
+    async aggregatePropertyValues(model, dbids, propertyName, aggregateFunc, initialValue = 0) {
+        if (!dbids) {
+            dbids = await this.findLeafNodes(model);
+        }
+        return new Promise(function (resolve, reject) {
+            let aggregatedValue = initialValue;
+            model.getBulkProperties(dbids, { propFilter: [propertyName] }, function (results) {
+                for (const result of results) {
+                    if (result.properties.length > 0) {
+                        const prop = result.properties[0];
+                        aggregatedValue = aggregateFunc(aggregatedValue, prop.displayValue, prop);
+                    }
+                }
+                resolve(aggregatedValue);
+            }, reject);
+        });
+    }
 }
 
 class AggregatesPanel extends Autodesk.Viewing.UI.PropertyPanel {

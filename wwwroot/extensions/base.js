@@ -35,7 +35,7 @@ export class BaseExtension extends Autodesk.Viewing.Extension {
      * @param {Autodesk.Viewing.Model} model Forge model.
      * @returns {Promise<number[]>} IDs of all leaf objects.
      */
-     findLeafNodes(model) {
+    findLeafNodes(model) {
         return new Promise(function (resolve, reject) {
             model.getObjectTree(function (tree) {
                 let leaves = [];
@@ -66,76 +66,6 @@ export class BaseExtension extends Autodesk.Viewing.Extension {
                     }
                 }
                 resolve(Array.from(propNames.values()));
-            }, reject);
-        });
-    }
-
-    /**
-     * Retrieves specific set of properties for specific set of objects.
-     * @param {Autodesk.Viewing.Model} model Input Forge model.
-     * @param {number[]} dbids List of object IDs to retrieve the properties for.
-     * @param {string[]} propNames List of names of properties to retrieve.
-     * @returns {Promise<Autodesk.Viewing.PropertyResult[]>}
-     */
-    getPropertyValues(model, dbids, propNames) {
-        return new Promise(function (resolve, reject) {
-            model.getBulkProperties(dbids, { propFilter: propNames }, resolve, reject);
-        });
-    }
-
-    /**
-     * Finds all the different values that appear for a specific property,
-     * together with a list of IDs of objects that contain these values.
-     * @async
-     * @param {Autodesk.Viewing.Model} model Forge model.
-     * @param {string} propertyName Name of property to compute the histogram for.
-     * @returns {Promise<Map<string, number[]>>} Mapping of property values to lists of object IDs that contain these values.
-     */
-    async findPropertyValueOccurrences(model, propertyName) {
-        const dbids = await this.findLeafNodes(model);
-        return new Promise(function (resolve, reject) {
-            model.getBulkProperties(dbids, { propFilter: [propertyName] }, function (results) {
-                let histogram = new Map();
-                for (const result of results) {
-                    if (result.properties.length > 0) {
-                        const key = result.properties[0].displayValue;
-                        if (histogram.has(key)) {
-                            histogram.get(key).push(result.dbId);
-                        } else {
-                            histogram.set(key, [result.dbId]);
-                        }
-                    }
-                }
-                resolve(histogram);
-            }, reject);
-        });
-    }
-
-    /**
-     * Aggregates values of a specific property from a range of objects, using a specific aggregating function.
-     * @async
-     * @param {Autodesk.Viewing.Model} model Forge model.
-     * @param {number[]} [dbids] Optional list of object IDs to include in the aggregation (by default, all objects are included).
-     * @param {string} propertyName Name of property whose values will be aggregated.
-     * @param {(aggregateValue: number, currentValue: number, property) => number} aggregateFunc Aggregating function for the property values.
-     * For example, `(sum, current, prop) => { return sum + current; }`.
-     * @param {number} initialValue Initial value for the aggregating function.
-     * @returns {Promise<number>} Final aggregated value.
-     */
-    async aggregatePropertyValues(model, dbids, propertyName, aggregateFunc, initialValue = 0) {
-        if (!dbids) {
-            dbids = await this.findLeafNodes(model);
-        }
-        return new Promise(function (resolve, reject) {
-            let aggregatedValue = initialValue;
-            model.getBulkProperties(dbids, { propFilter: [propertyName] }, function (results) {
-                for (const result of results) {
-                    if (result.properties.length > 0) {
-                        const prop = result.properties[0];
-                        aggregatedValue = aggregateFunc(aggregatedValue, prop.displayValue, prop);
-                    }
-                }
-                resolve(aggregatedValue);
             }, reject);
         });
     }

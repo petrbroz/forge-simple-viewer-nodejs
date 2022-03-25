@@ -65,6 +65,34 @@ class HistogramExtension extends BaseExtension {
             this._pieChartPanel.setModel(model);
         }
     }
+
+    /**
+     * Finds all the different values that appear for a specific property,
+     * together with a list of IDs of objects that contain these values.
+     * @async
+     * @param {Autodesk.Viewing.Model} model Forge model.
+     * @param {string} propertyName Name of property to compute the histogram for.
+     * @returns {Promise<Map<string, number[]>>} Mapping of property values to lists of object IDs that contain these values.
+     */
+    async findPropertyValueOccurrences(model, propertyName) {
+        const dbids = await this.findLeafNodes(model);
+        return new Promise(function (resolve, reject) {
+            model.getBulkProperties(dbids, { propFilter: [propertyName] }, function (results) {
+                let histogram = new Map();
+                for (const result of results) {
+                    if (result.properties.length > 0) {
+                        const key = result.properties[0].displayValue;
+                        if (histogram.has(key)) {
+                            histogram.get(key).push(result.dbId);
+                        } else {
+                            histogram.set(key, [result.dbId]);
+                        }
+                    }
+                }
+                resolve(histogram);
+            }, reject);
+        });
+    }
 }
 
 class ChartPanel extends Autodesk.Viewing.UI.DockingPanel {

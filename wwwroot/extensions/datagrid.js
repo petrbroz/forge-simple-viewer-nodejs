@@ -72,6 +72,19 @@ class DataGridExtension extends BaseExtension {
             this._panel.update(model);
         }
     }
+
+    /**
+     * Retrieves specific set of properties for specific set of objects.
+     * @param {Autodesk.Viewing.Model} model Input Forge model.
+     * @param {number[]} dbids List of object IDs to retrieve the properties for.
+     * @param {string[]} propNames List of names of properties to retrieve.
+     * @returns {Promise<Autodesk.Viewing.PropertyResult[]>}
+     */
+    getPropertyValues(model, dbids, propNames) {
+        return new Promise(function (resolve, reject) {
+            model.getBulkProperties(dbids, { propFilter: propNames }, resolve, reject);
+        });
+    }
 }
 
 class DataGridPanel extends Autodesk.Viewing.UI.DockingPanel {
