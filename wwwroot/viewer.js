@@ -15,8 +15,13 @@ async function getAccessToken(callback) {
 }
 
 export function initViewer(container) {
+    const options = {
+        env: 'AutodeskProduction2',
+        api: 'streamingV2',
+        getAccessToken
+    };
     return new Promise(function (resolve, reject) {
-        Autodesk.Viewing.Initializer({ getAccessToken }, function () {
+        Autodesk.Viewing.Initializer(options, function () {
             const config = {
                 extensions: ['Autodesk.DocumentBrowser']
             };
