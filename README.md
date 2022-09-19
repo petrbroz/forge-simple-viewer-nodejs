@@ -27,7 +27,7 @@ or [macOS Terminal](https://support.apple.com/guide/terminal/welcome/mac))
 - Setup environment variables:
   - `FORGE_CLIENT_ID` - your Forge application client ID
   - `FORGE_CLIENT_SECRET` - your Forge application client secret
-  - `FORGE_BUCKET` (optional) - name of Forge bucket to store your designs in
+  - `FORGE_BUCKET` - name of Forge bucket to store your designs in
 - Run the server: `npm start`
 
 > When using [Visual Studio Code](https://code.visualstudio.com),
