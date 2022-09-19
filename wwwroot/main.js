@@ -1,5 +1,5 @@
 import { initViewer, loadModel } from './viewer.js';
-// import { ColladaLoader } from 'three/addons/loaders/ColladaLoader.js';
+import { ParametricGeometry } from 'three/addons/geometries/ParametricGeometry.js';
 
 initViewer(document.getElementById('preview')).then(viewer => {
     const urn = window.location.hash?.substring(1);
@@ -18,7 +18,7 @@ async function setupModelSelection(viewer, selectedUrn) {
         dropdown.innerHTML = models.map(model => `<option value=${model.urn} ${model.urn === selectedUrn ? 'selected' : ''}>${model.name}</option>`).join('\n');
         dropdown.onchange = () => {
             window.location.hash = dropdown.value;
-            loadModel(viewer, dropdown.value).then(() => addTestSceneCollada(viewer));
+            loadModel(viewer, dropdown.value).then(() => addTestSceneNURBS(viewer));
         }
         if (dropdown.value) {
             dropdown.onchange();
@@ -31,7 +31,7 @@ async function setupModelSelection(viewer, selectedUrn) {
 
 async function addTestSceneBasic(viewer) {
     const scene = new THREE.Scene();
-    const normalsMaterial =  new THREE.MeshNormalMaterial({ side: THREE.FrontSide });
+    const normalsMaterial = new THREE.MeshNormalMaterial({ side: THREE.FrontSide });
     const sphere = new THREE.IcosahedronGeometry(12.0, THREE.REVISION <= 71 ? 4 : 8);
     const torus = new THREE.TorusGeometry(20.0, 4.0, 16, 64);
     scene.add(new THREE.Mesh(sphere, normalsMaterial));
@@ -41,19 +41,63 @@ async function addTestSceneBasic(viewer) {
 
 async function addTestSceneCollada(viewer) {
     const loader = new THREE.ColladaLoader();
+    const normalsMaterial = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
     loader.load('/abb_irb52_7_120.dae', function (collada) {
         let dae = collada.scene;
         dae.traverse(function (child) {
             if (child.isMesh) {
-                child.material.flatShading = true; // model does not have normals
+                child.material = normalsMaterial;
             }
         });
-        dae.scale.x = dae.scale.y = dae.scale.z = 10.0;
+        dae.scale.x = dae.scale.y = dae.scale.z = 25.0;
         dae.updateMatrix();
         const grid = new THREE.GridHelper(20, 20, 0x888888, 0x444444);
         const scene = new THREE.Scene();
         scene.add(grid);
+        scene.add(new THREE.AmbientLight(0x808080));
         scene.add(dae);
         viewer.companions.add('my-scene-collada', scene, Autodesk.Viewing.CompanionType.THREE_SCENE_BEFORE);
     });
+}
+
+async function addTestSceneNURBS(viewer) {
+    const nsControlPoints = [
+        [
+            new THREE.Vector4(- 200, - 200, 100, 1),
+            new THREE.Vector4(- 200, - 100, - 200, 1),
+            new THREE.Vector4(- 200, 100, 250, 1),
+            new THREE.Vector4(- 200, 200, - 100, 1)
+        ],
+        [
+            new THREE.Vector4(0, - 200, 0, 1),
+            new THREE.Vector4(0, - 100, - 100, 5),
+            new THREE.Vector4(0, 100, 150, 5),
+            new THREE.Vector4(0, 200, 0, 1)
+        ],
+        [
+            new THREE.Vector4(200, - 200, - 100, 1),
+            new THREE.Vector4(200, - 100, 200, 1),
+            new THREE.Vector4(200, 100, - 250, 1),
+            new THREE.Vector4(200, 200, 100, 1)
+        ]
+    ];
+    const degree1 = 2;
+    const degree2 = 3;
+    const knots1 = [0, 0, 0, 1, 1, 1];
+    const knots2 = [0, 0, 0, 0, 1, 1, 1, 1];
+    const nurbsSurface = new THREE.NURBSSurface(degree1, degree2, knots1, knots2, nsControlPoints);
+    const map = new THREE.TextureLoader().load('/grid.png');
+    map.wrapS = map.wrapT = THREE.RepeatWrapping;
+    map.anisotropy = 16;
+    function getSurfacePoint(u, v, target) {
+        return nurbsSurface.getPoint(u, v, target);
+    }
+    const geometry = new ParametricGeometry(getSurfacePoint, 20, 20);
+    const material = new THREE.MeshLambertMaterial({ map: map, side: THREE.DoubleSide });
+    const object = new THREE.Mesh(geometry, material);
+    object.position.set(- 200, 100, 0);
+    object.scale.multiplyScalar(1);
+    const scene = new THREE.Scene();
+    scene.add(object);
+    viewer.companions.add('my-scene-nurbs', scene, Autodesk.Viewing.CompanionType.THREE_SCENE_BEFORE);
 }
