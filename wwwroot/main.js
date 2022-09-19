@@ -1,5 +1,5 @@
 import { initViewer, loadModel } from './viewer.js';
-import { ParametricGeometry } from 'three/addons/geometries/ParametricGeometry.js';
+// import { ParametricGeometry } from 'three/addons/geometries/ParametricGeometry.js';
 
 initViewer(document.getElementById('preview')).then(viewer => {
     const urn = window.location.hash?.substring(1);
@@ -18,7 +18,7 @@ async function setupModelSelection(viewer, selectedUrn) {
         dropdown.innerHTML = models.map(model => `<option value=${model.urn} ${model.urn === selectedUrn ? 'selected' : ''}>${model.name}</option>`).join('\n');
         dropdown.onchange = () => {
             window.location.hash = dropdown.value;
-            loadModel(viewer, dropdown.value).then(() => addTestSceneNURBS(viewer));
+            loadModel(viewer, dropdown.value).then(() => addTestSceneInstancing(viewer));
         }
         if (dropdown.value) {
             dropdown.onchange();
@@ -60,6 +60,7 @@ async function addTestSceneCollada(viewer) {
     });
 }
 
+/*
 async function addTestSceneNURBS(viewer) {
     const nsControlPoints = [
         [
@@ -100,4 +101,40 @@ async function addTestSceneNURBS(viewer) {
     const scene = new THREE.Scene();
     scene.add(object);
     viewer.companions.add('my-scene-nurbs', scene, Autodesk.Viewing.CompanionType.THREE_SCENE_BEFORE);
+}
+*/
+
+async function addTestSceneInstancing(viewer) {
+    const randomizeMatrix = function () {
+        const position = new THREE.Vector3();
+        const rotation = new THREE.Euler();
+        const quaternion = new THREE.Quaternion();
+        const scale = new THREE.Vector3();
+        return function (matrix) {
+            position.x = Math.random() * 800 - 400;
+            position.y = Math.random() * 800 - 400;
+            position.z = Math.random() * 800 - 400;
+            rotation.x = Math.random() * 2 * Math.PI;
+            rotation.y = Math.random() * 2 * Math.PI;
+            rotation.z = Math.random() * 2 * Math.PI;
+            quaternion.setFromEuler(rotation);
+            scale.x = scale.y = scale.z = Math.random() * 1;
+            matrix.compose(position, quaternion, scale);
+        };
+    }();
+
+    const count = 10000;
+    const matrix = new THREE.Matrix4();
+    const geometry = new THREE.TorusGeometry(10.0, 4.0, 16, 64);
+    const material = new THREE.MeshNormalMaterial({ side: THREE.DoubleSide });
+    // const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, transparent: true, opacity: 0.5 });
+    //const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
+    const mesh = new THREE.InstancedMesh(geometry, material, count);
+    for (let i = 0; i < count; i++) {
+        randomizeMatrix(matrix);
+        mesh.setMatrixAt(i, matrix);
+    }
+    const scene = new THREE.Scene();
+    scene.add(mesh);
+    viewer.companions.add('my-scene-instancing', scene, Autodesk.Viewing.CompanionType.THREE_SCENE_BEFORE);
 }
