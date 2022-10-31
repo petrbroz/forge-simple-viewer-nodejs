@@ -1,4 +1,4 @@
-const fs = require('fs');
+const axios = require('axios');
 const { BucketsApi, ObjectsApi } = require('forge-apis');
 const { FORGE_BUCKET } = require('../../config.js');
 const { getInternalToken } = require('./auth.js');
@@ -27,24 +27,29 @@ async function listObjects() {
     return objects;
 }
 
-async function uploadObject(objectName, filePath) {
-    await ensureBucketExists(FORGE_BUCKET);
-    const buffer = await fs.promises.readFile(filePath);
-    const results = await new ObjectsApi().uploadResources(
-        FORGE_BUCKET,
-        [{ objectKey: objectName, data: buffer }],
-        { useAcceleration: false, minutesExpiration: 15 },
-        null,
-        await getInternalToken()
-    );
-    if (results[0].error) {
-        throw results[0].completed;
-    } else {
-        return results[0].completed;
-    }
+async function getUploadUrl(objectKey) {
+    const auth = await getInternalToken();
+    const resp = await axios.get(`https://developer.api.autodesk.com/oss/v2/buckets/${encodeURIComponent(FORGE_BUCKET)}/objects/${encodeURIComponent(objectKey)}/signeds3upload`, {
+        headers: {
+            'Authorization': 'Bearer ' + auth.access_token
+        }
+    });
+    return resp.data;
+}
+
+async function finalizeUpload(objectKey, uploadKey) {
+    const auth = await getInternalToken();
+    const resp = await axios.post(`https://developer.api.autodesk.com/oss/v2/buckets/${encodeURIComponent(FORGE_BUCKET)}/objects/${encodeURIComponent(objectKey)}/signeds3upload`, { uploadKey }, {
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + auth.access_token
+        }
+    });
+    return resp.data;
 }
 
 module.exports = {
     listObjects,
-    uploadObject
+    getUploadUrl,
+    finalizeUpload
 };

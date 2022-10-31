@@ -1,7 +1,6 @@
 const express = require('express');
-const formidable = require('express-formidable');
-const { listObjects, uploadObject } = require('../services/forge/oss.js');
-const { translateObject, getManifest, urnify } = require('../services/forge/md.js');
+const { listObjects, getUploadUrl, finalizeUpload } = require('../services/forge/oss.js');
+const { getManifest, urnify, translateObject } = require('../services/forge/md.js');
 
 let router = express.Router();
 
@@ -45,21 +44,19 @@ router.get('/:urn/status', async function (req, res, next) {
     }
 });
 
-// POST /api/models
-// Upload new model and kick-off its translation.
-router.post('/', formidable(), async function (req, res, next) {
-    const file = req.files['model-file'];
-    if (!file) {
-        res.status(400).send('The required field ("model-file") is missing.');
-        return;
-    }
+// POST /api/models/:objectKey[?uploadKey=...]
+// Get a URL for direct upload to S3, or finalize the upload (if uploadKey is provided).
+router.post('/:objectKey', async function (req, res, next) {
     try {
-        const obj = await uploadObject(file.name, file.path);
-        await translateObject(urnify(obj.objectId), req.fields['model-zip-entrypoint']);
-        res.json({
-            name: obj.objectKey,
-            urn: urnify(obj.objectId)
-        });
+        const { objectKey } = req.params;
+        const { uploadKey } = req.query;
+        if (!uploadKey) {
+            res.json(await getUploadUrl(objectKey));
+        } else {
+            const obj = await finalizeUpload(objectKey, uploadKey);
+            await translateObject(urnify(obj.objectId));
+            res.status(200).end();
+        }
     } catch (err) {
         next(err);
     }

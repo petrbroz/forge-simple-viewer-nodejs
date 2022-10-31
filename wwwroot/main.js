@@ -33,22 +33,29 @@ async function setupModelUpload(viewer) {
     upload.onclick = () => input.click();
     input.onchange = async () => {
         const file = input.files[0];
-        let data = new FormData();
-        data.append('model-file', file);
-        if (file.name.endsWith('.zip')) { // When uploading a zip file, ask for the main design file in the archive
-            const entrypoint = window.prompt('Please enter the filename of the main design inside the archive.');
-            data.append('model-zip-entrypoint', entrypoint);
-        }
         upload.setAttribute('disabled', 'true');
         models.setAttribute('disabled', 'true');
         showNotification(`Uploading model <em>${file.name}</em>. Do not reload the page.`);
         try {
-            const resp = await fetch('/api/models', { method: 'POST', body: data });
+            // Get upload URL
+            let resp = await fetch(`/api/models/${encodeURIComponent(file.name)}`, { method: 'POST' });
             if (!resp.ok) {
-                throw new Error(await resp.text());
+                throw new Error('Could not get upload URL: ' + await resp.text());
             }
-            const model = await resp.json();
-            setupModelSelection(viewer, model.urn);
+            const { uploadKey, urls } = await resp.json();
+            console.log('Upload URLs', urls);
+
+            // Upload
+            resp = await fetch(urls[0], { method: 'PUT', body: file });
+            if (!resp.ok) {
+                throw new Error('Could not upload file: ' + await resp.text());
+            }
+
+            // Complete upload
+            resp = await fetch(`/api/models/${encodeURIComponent(file.name)}?uploadKey=${uploadKey}`, { method: 'POST' });
+            if (!resp.ok) {
+                throw new Error('Could not finalize file upload: ' + await resp.text());
+            }
         } catch (err) {
             alert(`Could not upload model ${file.name}. See the console for more details.`);
             console.error(err);
